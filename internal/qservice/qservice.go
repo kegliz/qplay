@@ -1,0 +1,100 @@
+package qservice
+
+import (
+	"image"
+
+	"kegnet.dev/qplay/internal/qprog"
+	"kegnet.dev/qplay/internal/qrender"
+	"kegnet.dev/qplay/internal/server/logger"
+)
+
+type (
+	ProgramValue struct {
+		Program qprog.Program `json:"program"`
+	}
+	ProgramIDValue struct {
+		ID string `json:"id"`
+	}
+
+	RenderResult struct {
+		Success bool   `json:"success"`
+		Error   string `json:"error"`
+		Image   string `json:"image"`
+	}
+
+	// ServiceOptions are options for constructing a service
+	ServiceOptions struct {
+		Logger *logger.Logger
+		Store  ProgramStore
+	}
+
+	Service interface {
+		RenderCircuit(log logger.LoggingFn, id string) (*image.RGBA, error)
+		SaveProgram(log logger.LoggingFn, pv *ProgramValue) (string, error)
+	}
+
+	service struct {
+		store ProgramStore
+
+		logger *logger.Logger
+		qr     *qrender.Renderer
+	}
+)
+
+// NewService creates a new service.
+func NewService(opts ServiceOptions) Service {
+	if opts.Logger == nil {
+		opts.Logger = logger.NewLogger(logger.LoggerOptions{
+			Debug: true,
+		})
+	}
+	if opts.Store == nil {
+		opts.Store = NewProgramStore()
+	}
+	s := service{
+		logger: opts.Logger,
+		store:  opts.Store,
+		qr:     qrender.NewDefaultQRenderer(),
+	}
+	// some initialization for testing
+	// program with 2 qubit - 1 step with 1 gate
+	p4 := qprog.Program{
+		NumOfQubits: 3,
+		Steps: []qprog.Step{
+			{
+				Gates: []qprog.Gate{
+					{Type: qprog.HGate, Targets: []int{0}},
+				},
+			},
+			{
+				Gates: []qprog.Gate{
+					{Type: qprog.XGate, Targets: []int{1}},
+					{Type: qprog.HGate, Targets: []int{2}},
+				},
+			},
+		},
+	}
+	s.store.(*programStore).programs["test"] = &p4
+	return &s
+}
+
+// RenderCircuit implements Service.
+func (s *service) RenderCircuit(log logger.LoggingFn, id string) (*image.RGBA, error) {
+	log(logger.DebugLevel).Msgf("Rendering circuit with id: " + id + " ...")
+	p, err := s.store.GetProgram(id)
+	if err != nil {
+		return nil, err
+	}
+	img := s.qr.RenderCircuit(p)
+	return img, nil
+}
+
+// SaveProgram implements Service.
+func (s *service) SaveProgram(log logger.LoggingFn, pv *ProgramValue) (string, error) {
+	log(logger.DebugLevel).Msg("Saving program... ")
+	p := qprog.NewProgram(pv.Program.NumOfQubits)
+
+	id, err := s.store.SaveProgram(p)
+
+	return id, err
+}

@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  # numeric env values should be qouted here because of a bug in k8s yaml parser
+  PORT: {{ .Values.app.container.port | quote}}

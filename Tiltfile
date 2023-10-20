@@ -1,0 +1,23 @@
+# Tiltfile
+
+# Load the helm_remote extension so we can create services from remote Helm charts
+# load('ext://helm_remote', 'helm_remote')
+
+# Load the nerdctl extension so we can build images using nerdctl
+load('ext://nerdctl', 'nerdctl_build')
+
+# Tell Tilt how to configure and deploy our service with Helm
+k8s_yaml(
+    helm(
+        './charts/app',
+        namespace='qplay-srv-local-dev',
+        values=['charts/app/values-local-dev-tilt.yaml']
+    )
+)
+
+nerdctl_build(
+    ref='registry.local/zkegli/qplay-srv:dev',
+    context='.',
+)
+
+k8s_resource(workload='qplay-srv', port_forwards=3001)

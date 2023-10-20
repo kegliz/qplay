@@ -1,0 +1,20 @@
+# Patterns to ignore when building packages.
+# This supports shell glob matching, relative path matching, and
+# negation (prefixed with !). Only one pattern per line.
+.git/
+.gitignore
+.dockerignore
+.helmignore
+
+# Common backup files
+*.swp
+*.bak
+*.tmp
+*.orig
+*~
+# Various IDEs
+.vscode/
+# other files
+Tiltfile
+Tiltfile.docker
+.DS_Store

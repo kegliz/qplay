@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"kegnet.dev/qplay/internal/config"
+	"kegnet.dev/qplay/internal/qservice"
 	"kegnet.dev/qplay/internal/server/logger"
 	"kegnet.dev/qplay/internal/server/router"
 
@@ -19,12 +20,14 @@ type (
 	appServer struct {
 		logger  *logger.Logger
 		router  *router.Router
+		qs      qservice.Service
 		version string
 	}
 
 	appServerOptions struct {
 		logger  *logger.Logger
 		router  *router.Router
+		qs      qservice.Service
 		version string
 	}
 )
@@ -34,6 +37,7 @@ func newAppServer(options appServerOptions) *appServer {
 	a := &appServer{
 		logger:  options.logger,
 		router:  options.router,
+		qs:      options.qs,
 		version: options.version,
 	}
 	a.router.SetRoutes(a.routes())
@@ -59,10 +63,14 @@ func NewServer(options ServerOptions) (server.Server, error) {
 		Debug:          options.C.GetBool("debug"),
 		TemplateFolder: options.C.GetString("templatefolder"),
 	})
-
+	qs := qservice.NewService(qservice.ServiceOptions{
+		Logger: l,
+		Store:  qservice.NewProgramStore(),
+	})
 	app := newAppServer(appServerOptions{
 		logger:  l,
 		router:  r,
+		qs:      qs,
 		version: options.Version,
 	})
 

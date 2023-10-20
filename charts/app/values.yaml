@@ -1,0 +1,21 @@
+# Default values for tandup-srv.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+app:
+  name: qplay-srv
+  group: qplay
+  replicaCount: 1
+  container:
+    image:
+      repository: REPONAME/
+      name: qplay-srv
+      tag: v0.0.1
+    imageConfig:
+      pullPolicy: IfNotPresent
+    port: 3001
+    config:
+      - name: app-config
+  service:
+    type: ClusterIP
+    port: 3001
+    protocol: TCP
