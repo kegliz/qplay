@@ -16,6 +16,33 @@ var (
 	requestCount     int64
 )
 
+type CORSOptions struct {
+	Origin string
+}
+
+// CORS middleware from
+// https://github.com/gin-gonic/gin/issues/29#issuecomment-89132826
+// https://www.moesif.com/blog/technical/cors/Authoritative-Guide-to-CORS-Cross-Origin-Resource-Sharing-for-REST-APIs/
+func cors(options CORSOptions) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		c.Writer.Header().Set("Access-Control-Allow-Origin", "*") // allow any origin domain
+		if options.Origin != "" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", options.Origin)
+		}
+		c.Writer.Header().Set("Access-Control-Max-Age", "86400")
+		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
+		c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+		c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length")
+		c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(200)
+		} else {
+			c.Next()
+		}
+	}
+}
+
 // requestWrapper is a middleware that logs the request and response.
 func requestWrapper(log *logger.Logger) func(c *gin.Context) {
 	return func(c *gin.Context) {

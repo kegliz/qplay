@@ -19,9 +19,10 @@ type (
 	}
 
 	RouterOptions struct {
-		Logger         *logger.Logger
-		TemplateFolder string
-		BasePath       string
+		Logger          *logger.Logger
+		TemplateFolder  string
+		BasePath        string
+		CORSAllowOrigin string
 	}
 
 	Route struct {
@@ -48,6 +49,10 @@ func NewRouter(options RouterOptions) *Router {
 
 	engine.Use(gin.Recovery())
 	engine.Use(requestWrapper(options.Logger))
+
+	engine.Use(cors(CORSOptions{
+		Origin: options.CORSAllowOrigin,
+	}))
 
 	router := &Router{
 		Engine:   engine,
