@@ -2,9 +2,9 @@ package qservice
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/kegliz/qplay/internal/qprog"
+	"github.com/kegliz/qplay/internal/server/logger"
 	"github.com/stretchr/testify/suite"
-	"kegnet.dev/qplay/internal/qprog"
-	"kegnet.dev/qplay/internal/server/logger"
 )
 
 type (

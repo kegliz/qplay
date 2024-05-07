@@ -3,8 +3,8 @@ package qservice
 import (
 	"testing"
 
+	"github.com/kegliz/qplay/internal/qprog"
 	"github.com/stretchr/testify/assert"
-	"kegnet.dev/qplay/internal/qprog"
 )
 
 // test programStore SaveProgram and GetProgram

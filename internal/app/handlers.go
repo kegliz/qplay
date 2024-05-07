@@ -5,8 +5,8 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"kegnet.dev/qplay/internal/qservice"
-	"kegnet.dev/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/qservice"
+	"github.com/kegliz/qplay/internal/server/logger"
 )
 
 var badRequestErrorMsg = "Bad Request - please contact the administrator"

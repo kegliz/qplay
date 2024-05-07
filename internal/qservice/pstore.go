@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
-	"kegnet.dev/qplay/internal/qprog"
+	"github.com/kegliz/qplay/internal/qprog"
 )
 
 type (

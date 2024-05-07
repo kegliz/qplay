@@ -1,5 +1,5 @@
 # https://medium.com/@chemidy/create-the-smallest-and-secured-golang-docker-image-based-on-scratch-4752223b7324
-FROM golang:1.21-alpine AS build
+FROM golang:1.22-alpine AS build
 # Ca-certificates is required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
 
@@ -24,7 +24,7 @@ COPY go.mod go.sum ./
 RUN go mod download
 
 COPY . .
-RUN CGO_ENABLED=0 go build -o /bin/qplay-srv cmd/web/main.go
+RUN CGO_ENABLED=0 go build -o /bin/qplay cmd/web/main.go
 
 FROM scratch
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
@@ -32,14 +32,10 @@ COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=build /etc/passwd /etc/passwd
 COPY --from=build /etc/group /etc/group
 # Copy our static executable.
-COPY --from=build /bin/qplay-srv /bin/qplay-srv
+COPY --from=build /bin/qplay-srv /bin/qplay
 COPY --from=build /src/config.yaml /
-COPY --from=build /src/templates/*.tmpl /templates/
-COPY --from=build /src/public /public
-
-# EXPOSE 3000/tcp
 
 # Use an unprivileged user.
 USER appuser:appuser
 
-ENTRYPOINT ["/bin/qplay-srv"]
+ENTRYPOINT ["/bin/qplay"]

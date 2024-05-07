@@ -3,8 +3,8 @@ package qrender
 import (
 	"testing"
 
+	"github.com/kegliz/qplay/internal/qprog"
 	"github.com/stretchr/testify/assert"
-	"kegnet.dev/qplay/internal/qprog"
 )
 
 // TestRenderCircuit is a test for RenderCircuit.
@@ -82,4 +82,45 @@ func TestRenderCircuit(t *testing.T) {
 	assert.NoError(err, "saving image failed")
 
 	// TODO: Add more tests to check that the image has the expected content
+}
+
+func TestRenderTeleportationCircuit(t *testing.T) {
+	assert := assert.New(t)
+
+	// 0: qubit to teleport
+	// 1-2: entangled pair
+	p := qprog.NewProgram(3)
+	// 1. create entangled pair
+	step := qprog.NewStep()
+	step.AddGate(qprog.NewHGate(1))
+	p.AddStep(step)
+	step = qprog.NewStep()
+	step.AddGate(qprog.NewCNotGate(1, 2))
+	p.AddStep(step)
+	// 2. prepare qubit to teleport
+	step = qprog.NewStep()
+	step.AddGate(qprog.NewCNotGate(0, 1))
+	p.AddStep(step)
+	step = qprog.NewStep()
+	step.AddGate(qprog.NewHGate(0))
+	p.AddStep(step)
+	// 3. measure qubit to teleport
+	step = qprog.NewStep()
+	step.AddGate(qprog.NewMeasurement(0))
+	step.AddGate(qprog.NewMeasurement(1))
+	p.AddStep(step)
+	// 4. apply gates based on measurement results
+	step = qprog.NewStep()
+	step.AddGate(qprog.NewCNotGate(1, 2))
+	p.AddStep(step)
+	step = qprog.NewStep()
+	step.AddGate(qprog.NewCZGate(0, 2))
+	p.AddStep(step)
+
+	// Render the circuit
+	qr := NewDefaultQRenderer()
+	img := qr.RenderCircuit(p)
+	err := SaveImage(img, "teleportation.png")
+	assert.NoError(err, "saving image failed")
+
 }

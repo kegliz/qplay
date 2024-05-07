@@ -6,8 +6,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"github.com/kegliz/qplay/internal/server/logger"
 	"github.com/stretchr/testify/suite"
-	"kegnet.dev/qplay/internal/server/logger"
 )
 
 type RouterTestSuite struct {

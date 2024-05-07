@@ -1,14 +1,12 @@
-# Default values for tandup-srv.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
+# Default values for qplay server.
 app:
-  name: qplay-srv
+  name: qplay
   group: qplay
   replicaCount: 1
   container:
     image:
       repository: REPONAME/
-      name: qplay-srv
+      name: qplay
       tag: v0.0.1
     imageConfig:
       pullPolicy: IfNotPresent

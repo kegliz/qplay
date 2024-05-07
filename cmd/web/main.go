@@ -11,8 +11,8 @@ import (
 	"syscall"
 	"time"
 
-	"kegnet.dev/qplay/internal/app"
-	"kegnet.dev/qplay/internal/config"
+	"github.com/kegliz/qplay/internal/app"
+	"github.com/kegliz/qplay/internal/config"
 )
 
 var (

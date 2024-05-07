@@ -3,7 +3,7 @@ package app
 import (
 	"net/http"
 
-	"kegnet.dev/qplay/internal/server/router"
+	"github.com/kegliz/qplay/internal/server/router"
 )
 
 func (a *appServer) routes() []*router.Route {

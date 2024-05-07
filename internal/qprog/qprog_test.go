@@ -4,39 +4,91 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/itsubaki/q"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHadamardGate(t *testing.T) {
-	assert := assert.New(t)
+// TestBela is a low level q test for teleportation
+func TestTeleportation(t *testing.T) {
+	qsim := q.New()
 
-	p := NewProgram(1)
-	s := NewStep()
-	err := s.AddGate(NewHGate(0))
-	assert.NoError(err)
-	err = p.AddStep(s)
-	assert.NoError(err)
-	result := p.Run()
+	// generate qubits of |phi>|0>|0>
+	phi := qsim.New(1+2i, 3+4i)
+	// phi := qsim.One()
+	// phi := qsim.Zero()
+	fmt.Println("phi")
+	for _, s := range qsim.State(phi) {
+		fmt.Println(s)
+	}
+	// qx := qsim.New(11+22i, 33+44i)
+	// fmt.Println("qx")
 
-	fmt.Println(result.q.State())
-	result.q.M(result.qc[0])
-	fmt.Println(result.q.State())
-}
+	// for _, s := range qsim.State(qx) {
+	// 	fmt.Println(s)
+	// }
+	// fmt.Println()
 
-func TestX(t *testing.T) {
-	assert := assert.New(t)
+	q0 := qsim.Zero()
+	//q0 := qsim.New(11+22i, 33+44i)
+	q1 := qsim.Zero()
+	fmt.Println("phi")
 
-	p := NewProgram(1)
-	s := NewStep()
+	for _, s := range qsim.State(phi) {
+		fmt.Println(s)
+	}
+	fmt.Println()
+	// for _, s := range qsim.State(qx) {
+	// 	fmt.Println(s)
+	// }
+	// fmt.Println()
 
-	err := s.AddGate(NewXGate(0))
-	assert.NoError(err)
-	err = p.AddStep(s)
-	assert.NoError(err)
+	for _, s := range qsim.State(q0) {
+		fmt.Println(s)
+	}
+	fmt.Println(qsim)
+	for _, s := range qsim.State() {
+		fmt.Println(s)
+	}
 
-	result := p.Run()
+	qsim.H(q0)
 
-	fmt.Println(result.q.State())
+	fmt.Println(qsim)
+	for _, s := range qsim.State() {
+		fmt.Println(s)
+	}
+
+	qsim.CNOT(q0, q1)
+	fmt.Println(qsim)
+	for _, s := range qsim.State() {
+		fmt.Println(s)
+	}
+
+	qsim.CNOT(phi, q0)
+	qsim.H(phi)
+	fmt.Println(qsim)
+	for _, s := range qsim.State() {
+		fmt.Println(s)
+	}
+
+	mphi := qsim.Measure(phi)
+	mq0 := qsim.Measure(q0)
+
+	fmt.Println(qsim)
+	for _, s := range qsim.State() {
+		fmt.Println(s)
+	}
+
+	qsim.CondX(mq0.IsOne(), q1)
+	qsim.CondZ(mphi.IsOne(), q1)
+	fmt.Println(qsim)
+	for _, s := range qsim.State() {
+		fmt.Println(s)
+	}
+
+	for _, s := range qsim.State(q1) {
+		fmt.Println(s)
+	}
+
 }
 
 // test AddStep error when qubit is out of range
@@ -151,3 +203,5 @@ func TestCheckTargetDuplicationWithDifferentSteps(t *testing.T) {
 	err := p.Check()
 	assert.NoError(err)
 }
+
+// TODO: check cnot, tofoli gates with programs: teleportation and quantum arithmetics

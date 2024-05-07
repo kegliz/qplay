@@ -16,8 +16,8 @@ k8s_yaml(
 )
 
 nerdctl_build(
-    ref='registry.local/zkegli/qplay-srv:dev',
+    ref='registry.local/zkegli/qplay:dev',
     context='.',
 )
 
-k8s_resource(workload='qplay-srv', port_forwards=3001)
+k8s_resource(workload='qplay', port_forwards=3001)

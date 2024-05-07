@@ -3,8 +3,8 @@ package server
 import (
 	"context"
 
-	"kegnet.dev/qplay/internal/server/logger"
-	"kegnet.dev/qplay/internal/server/router"
+	"github.com/kegliz/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/server/router"
 )
 
 type (

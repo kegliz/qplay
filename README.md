@@ -5,4 +5,3 @@ Easy to use quantum computing simulator and visualizer for building and testing 
 
 ## Installation
 
-## Frontend

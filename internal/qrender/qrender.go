@@ -13,7 +13,7 @@ import (
 
 	"os"
 
-	"kegnet.dev/qplay/internal/qprog"
+	"github.com/kegliz/qplay/internal/qprog"
 )
 
 type Renderer struct {

@@ -8,7 +8,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
-	"kegnet.dev/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/server/logger"
 )
 
 var (

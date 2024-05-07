@@ -3,12 +3,12 @@ package app
 import (
 	"context"
 
-	"kegnet.dev/qplay/internal/config"
-	"kegnet.dev/qplay/internal/qservice"
-	"kegnet.dev/qplay/internal/server/logger"
-	"kegnet.dev/qplay/internal/server/router"
+	"github.com/kegliz/qplay/internal/config"
+	"github.com/kegliz/qplay/internal/qservice"
+	"github.com/kegliz/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/server/router"
 
-	"kegnet.dev/qplay/internal/server"
+	"github.com/kegliz/qplay/internal/server"
 )
 
 type (

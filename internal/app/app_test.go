@@ -9,10 +9,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/kegliz/qplay/internal/config"
+	"github.com/kegliz/qplay/internal/server"
+	"github.com/kegliz/qplay/internal/server/router"
 	"github.com/stretchr/testify/suite"
-	"kegnet.dev/qplay/internal/config"
-	"kegnet.dev/qplay/internal/server"
-	"kegnet.dev/qplay/internal/server/router"
 )
 
 type (

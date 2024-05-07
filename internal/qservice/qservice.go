@@ -3,9 +3,9 @@ package qservice
 import (
 	"image"
 
-	"kegnet.dev/qplay/internal/qprog"
-	"kegnet.dev/qplay/internal/qrender"
-	"kegnet.dev/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/qprog"
+	"github.com/kegliz/qplay/internal/qrender"
+	"github.com/kegliz/qplay/internal/server/logger"
 )
 
 type (

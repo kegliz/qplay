@@ -2,17 +2,22 @@ package qprog
 
 import (
 	"fmt"
-
-	"github.com/itsubaki/q"
 )
 
 type (
 	Program struct {
-		ID          string `json:"id"`
-		NumOfQubits int    `json:"numofqubits"`
-		Steps       []Step `json:"steps"`
+		ID              string `json:"id"`
+		NumOfQubits     int    `json:"numofqubits"`
+		Steps           []Step `json:"steps"`
+		initializations []initQubit
 	}
 
+	initQubit struct {
+		index int
+		name  string
+		alfa  complex128
+		beta  complex128
+	}
 	Step struct {
 		Gates []Gate `json:"gates"`
 	}
@@ -24,18 +29,29 @@ type (
 		Targets  []int    `json:"targets"`
 		Controls []int    `json:"controls"`
 	}
-
-	Result struct {
-		q  *q.Q
-		qc []q.Qubit
-	}
 )
 
 func NewProgram(numOfQubits int) *Program {
 	return &Program{
-		NumOfQubits: numOfQubits,
-		Steps:       []Step{},
+		NumOfQubits:     numOfQubits,
+		Steps:           []Step{},
+		initializations: []initQubit{},
 	}
+}
+
+// InitializeQubitWithAlfa initializes a qubit with alfa.
+func (p *Program) InitializeQubit(i int, name string, alfa complex128, beta complex128) error {
+	if i >= p.NumOfQubits {
+		return fmt.Errorf("qubit is out of range while initializing qubit")
+	}
+	p.initializations = append(p.initializations, initQubit{
+		name:  name,
+		index: i,
+		alfa:  alfa,
+		beta:  beta,
+	})
+
+	return nil
 }
 
 func NewProgramWithID(numOfQubits int, id string) *Program {
@@ -53,6 +69,7 @@ func NewStep() *Step {
 }
 
 // AddStep adds a step to program.
+// TODO: check if we wrongly use a qubit after it is measured
 func (p *Program) AddStep(step *Step) error {
 	if len(step.Gates) == 0 {
 		return fmt.Errorf("step is empty while adding step")
@@ -82,25 +99,9 @@ func (s *Step) maxIndex() int {
 	return max
 }
 
-// NewXGate returns a new XGate.
-func NewXGate(target int) *Gate {
-	return &Gate{
-		Type:    XGate,
-		Targets: []int{target},
-	}
-}
-
-// NewHGate returns a new HGate.
-func NewHGate(target int) *Gate {
-	return &Gate{
-		Type:    HGate,
-		Targets: []int{target},
-	}
-}
-
 // AddGate adds a gate to step.
 func (step *Step) AddGate(gate *Gate) error {
-	// iterate through step.gates and check that gate.targets and gate.controls are not duplicated with the current gate
+	// iterate through step.gates and check that gate.targets and gate.controls are not duplicated with the current gates
 	for _, g := range step.Gates {
 		for _, t := range gate.Targets {
 			for _, tt := range g.Targets {
@@ -131,6 +132,8 @@ func (step *Step) AddGate(gate *Gate) error {
 	return nil
 }
 
+// Check the validity of the program
+// TODO: check the valid usage of measured qubits
 func (p *Program) Check() error {
 	for _, step := range p.Steps {
 		err := step.Check(p.NumOfQubits)
@@ -182,30 +185,4 @@ func contains(slice []int, val int) bool {
 		}
 	}
 	return false
-}
-
-// Run executes quantum circuit.
-// It returns the result of quantum circuit.
-// TODO: separate the simulation from Program.
-func (p *Program) Run() *Result {
-	qsim := q.New()
-	qc := make([]q.Qubit, p.NumOfQubits)
-	for i := range qc {
-		qc[i] = qsim.Zero()
-	}
-	// apply quantum circuit
-	for _, step := range p.Steps {
-		for _, gate := range step.Gates {
-			switch gate.Type {
-			case HGate:
-				qsim.H(qc[gate.Targets[0]])
-			case XGate:
-				qsim.X(qc[gate.Targets[0]])
-			}
-		}
-	}
-	return &Result{
-		q:  qsim,
-		qc: qc,
-	}
 }
