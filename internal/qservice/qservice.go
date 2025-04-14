@@ -29,8 +29,8 @@ type (
 	}
 
 	Service interface {
-		RenderCircuit(log logger.LoggingFn, id string) (*image.RGBA, error)
-		SaveProgram(log logger.LoggingFn, pv *ProgramValue) (string, error)
+		RenderCircuit(log *logger.Logger, id string) (*image.RGBA, error)
+		SaveProgram(log *logger.Logger, pv *ProgramValue) (string, error)
 	}
 
 	service struct {
@@ -79,8 +79,8 @@ func NewService(opts ServiceOptions) Service {
 }
 
 // RenderCircuit implements Service.
-func (s *service) RenderCircuit(log logger.LoggingFn, id string) (*image.RGBA, error) {
-	log(logger.DebugLevel).Msgf("Rendering circuit with id: " + id + " ...")
+func (s *service) RenderCircuit(l *logger.Logger, id string) (*image.RGBA, error) {
+	l.Debug().Msgf("Rendering circuit with id: " + id + " ...")
 	p, err := s.store.GetProgram(id)
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ func (s *service) RenderCircuit(log logger.LoggingFn, id string) (*image.RGBA, e
 }
 
 // SaveProgram implements Service.
-func (s *service) SaveProgram(log logger.LoggingFn, pv *ProgramValue) (string, error) {
-	log(logger.DebugLevel).Msg("Saving program... ")
+func (s *service) SaveProgram(l *logger.Logger, pv *ProgramValue) (string, error) {
+	l.Debug().Msg("Saving program... ")
 	p := qprog.NewProgram(pv.Program.NumOfQubits)
 
 	id, err := s.store.SaveProgram(p)

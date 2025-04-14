@@ -171,7 +171,7 @@ func (qrun *qRuntime) Run(p *Program) (*Result, error) {
 				} else {
 					qsim.CNOT(regs[gate.Controls[0]].q, regs[gate.Targets[0]].q)
 				}
-			case TofoliGate:
+			case ToffoliGate:
 				qsim.Toffoli(regs[gate.Controls[0]].q, regs[gate.Controls[1]].q, regs[gate.Targets[0]].q)
 			case CZGate:
 				if regs[gate.Controls[0]].isMeasured {

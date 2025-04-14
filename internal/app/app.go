@@ -2,7 +2,10 @@ package app
 
 import (
 	"context"
+	"errors"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/kegliz/qplay/internal/config"
 	"github.com/kegliz/qplay/internal/qservice"
 	"github.com/kegliz/qplay/internal/server/logger"
@@ -45,12 +48,14 @@ func newAppServer(options appServerOptions) *appServer {
 }
 
 // Listen implements server.Server.
-func (a *appServer) Listen(port int) error {
+// Listen implements server.Server.
+func (a *appServer) Listen(port int, localOnly bool) error {
 	a.logger.Debug().Str("version", a.version).Msg("debug quantum playground server")
-	a.logger.Info(). //Str("host", "").
-				Int("port", port).
-				Msg("Starting quantum playground service")
-	return a.router.Start(port)
+	a.logger.Info().
+		Int("port", port).
+		Bool("localOnly", localOnly).
+		Msg("Starting quantum playground service")
+	return a.router.Start(port, localOnly)
 }
 
 // Shutdown implements server.Server.
@@ -60,8 +65,7 @@ func (a *appServer) Shutdown(ctx context.Context) error {
 
 func NewServer(options ServerOptions) (server.Server, error) {
 	l, r := server.NewLoggerAndRouter(server.EngineOptions{
-		Debug:          options.C.GetBool("debug"),
-		TemplateFolder: options.C.GetString("templatefolder"),
+		Debug: options.C.GetBool("debug"),
 	})
 	qs := qservice.NewService(qservice.ServiceOptions{
 		Logger: l,
@@ -75,4 +79,16 @@ func NewServer(options ServerOptions) (server.Server, error) {
 	})
 
 	return app, nil
+}
+
+func (a *appServer) getLoggerFromContext(c *gin.Context) (*logger.Logger, error) {
+	if loggerInstance, ok := c.Get("logger"); ok {
+		if loggerInstance, ok := loggerInstance.(*logger.Logger); ok {
+			return loggerInstance, nil
+		}
+	}
+	err := errors.New("logger not found in context")
+	a.logger.Error().Err(err).Send()
+	c.String(http.StatusInternalServerError, internalServerErrorMsg)
+	return nil, err
 }

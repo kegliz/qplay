@@ -42,7 +42,7 @@ func appMain() error {
 		return fmt.Errorf("failed to create server: %+v", err)
 	}
 	go func() {
-		if err := srv.Listen(conf.GetInt("port")); err != nil && err != http.ErrServerClosed {
+		if err := srv.Listen(conf.GetInt("port"), conf.GetBool("localonly")); err != nil && err != http.ErrServerClosed {
 			log.Fatalf("Listen: %s\n", err)
 		}
 	}()

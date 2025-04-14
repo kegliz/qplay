@@ -1,7 +1,6 @@
 package qservice
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/kegliz/qplay/internal/qprog"
 	"github.com/kegliz/qplay/internal/server/logger"
 	"github.com/stretchr/testify/suite"
@@ -21,7 +20,6 @@ type (
 	ServiceTestSuite struct {
 		suite.Suite
 		Logger      *logger.Logger
-		LogFn       logger.LoggingFn
 		TestService Service
 		storeMock   *storeMock
 	}
@@ -56,7 +54,6 @@ func (s *ServiceTestSuite) SetupTest() {
 	})
 
 	s.Logger = logger
-	s.LogFn = logger.ContextLoggingFn(&gin.Context{})
 }
 
 func (s *ServiceTestSuite) TestNewService() {
@@ -77,7 +74,7 @@ func (s *ServiceTestSuite) TestSaveProgram() {
 			Steps:       []qprog.Step{},
 		},
 	}
-	id, err := s.TestService.SaveProgram(s.LogFn, pv)
+	id, err := s.TestService.SaveProgram(s.Logger, pv)
 	s.Nil(err)
 	s.Equal("id", id)
 	s.Equal(1, s.storeMock.saveProgramCallCount)
@@ -93,7 +90,7 @@ func (s *ServiceTestSuite) TestSaveProgramError() {
 			Steps:       []qprog.Step{},
 		},
 	}
-	id, err := s.TestService.SaveProgram(s.LogFn, pv)
+	id, err := s.TestService.SaveProgram(s.Logger, pv)
 	s.ErrorIs(err, new(ErrProgramStore))
 	s.Equal("", id)
 	s.Equal(1, s.storeMock.saveProgramCallCount)

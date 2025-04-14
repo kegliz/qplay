@@ -1,6 +1,7 @@
 package qrender
 
 import (
+	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -87,12 +88,14 @@ func (qr Renderer) RenderCircuit(p *qprog.Program) *image.RGBA {
 }
 
 // SaveImage saves an image to a file
-func SaveImage(img *image.RGBA, filename string) error {
+func SaveImage(img *image.RGBA, filename string) (err error) {
 	f, err := os.Create(filename)
 	if err != nil {
 		return fmt.Errorf("cannot create circuit.png: %v", err)
 	}
-	defer f.Close()
+	defer func() {
+		err = errors.Join(err, f.Close())
+	}()
 
 	err = png.Encode(f, img)
 	if err != nil {

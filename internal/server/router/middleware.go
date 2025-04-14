@@ -43,12 +43,17 @@ func cors(options CORSOptions) gin.HandlerFunc {
 	}
 }
 
-// requestWrapper is a middleware that logs the request and response.
+// requestWrapper is a middleware that logs the request and response and
+// It injects the logger into the context.
+// It is used to log the request and response.
+// It is used to set the request id and request count in the context.
 func requestWrapper(log *logger.Logger) func(c *gin.Context) {
 	return func(c *gin.Context) {
-		setupContext(c)
+		reqCount, reqID := setupContext(c)
+		l := log.SpawnForContext(reqCount, reqID)
+		c.Set("logger", l)
 		reqPath := c.Request.URL.Path
-		log.Debugc(c).Msgf("Incoming request: %s", reqPath)
+		l.Debug().Msgf("Incoming request: %s", reqPath)
 
 		start := time.Now()
 
@@ -66,23 +71,25 @@ func requestWrapper(log *logger.Logger) func(c *gin.Context) {
 
 		switch {
 		case status == http.StatusOK || status == http.StatusCreated || status == http.StatusNoContent:
-			log.Infoc(c).Fields(meta).Msg(requestServedMsg)
+			l.Info().Fields(meta).Msg(requestServedMsg)
 		case status == http.StatusNotFound:
-			log.Warnc(c).Fields(meta).Msg(requestServedMsg)
+			l.Warn().Fields(meta).Msg(requestServedMsg)
 		default:
-			log.Errorc(c).Fields(meta).Msg(requestServedMsg)
+			l.Error().Fields(meta).Msg(requestServedMsg)
 		}
 	}
 }
 
 // setupContext sets up the context for the request.
 // It sets the request id and increments the request count.
-func setupContext(c *gin.Context) {
-	c.Set("requestcount", strconv.FormatInt(atomic.AddInt64(&requestCount, 1), 10))
-	reqID := c.Request.Header.Get("X-Request-Id")
+func setupContext(c *gin.Context) (reqCount string, reqID string) {
+	reqCount = strconv.FormatInt(atomic.AddInt64(&requestCount, 1), 10)
+	c.Set("requestcount", reqCount)
+	reqID = c.Request.Header.Get("X-Request-Id")
 	if reqID == "" {
 		reqID = uuid.Must(uuid.NewRandom()).String()
 	}
 	c.Set("requestid", reqID)
 	c.Writer.Header().Set("X-Request-Id", reqID)
+	return
 }

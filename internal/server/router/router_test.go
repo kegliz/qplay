@@ -53,9 +53,8 @@ func (s *RouterTestSuite) SetupSuite() {
 	}
 	s.BasePath = "/my/crazy/path"
 	s.BasePathRouter = NewRouter(RouterOptions{
-		Logger:         log,
-		BasePath:       s.BasePath,
-		TemplateFolder: "testdata/templates",
+		Logger:   log,
+		BasePath: s.BasePath,
 	})
 	s.BasePathRouter.SetRoutes(testRoutes)
 }

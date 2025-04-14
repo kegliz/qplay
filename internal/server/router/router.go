@@ -20,7 +20,6 @@ type (
 
 	RouterOptions struct {
 		Logger          *logger.Logger
-		TemplateFolder  string
 		BasePath        string
 		CORSAllowOrigin string
 	}
@@ -44,7 +43,6 @@ func NewRouter(options RouterOptions) *Router {
 	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 
-	engine.LoadHTMLGlob(options.TemplateFolder + "/*.tmpl")
 	engine.Static("/static", "./public") //TODO it should be configurable
 
 	engine.Use(gin.Recovery())
@@ -65,9 +63,14 @@ func NewRouter(options RouterOptions) *Router {
 }
 
 // Start starts the server
-func (r *Router) Start(port int) error {
+// If localOnly is true, the server will only be accessible from localhost
+func (r *Router) Start(port int, localOnly bool) error {
+	var ip string
+	if localOnly {
+		ip = "127.0.0.1"
+	}
 	r.HTTPServer = &http.Server{
-		Addr:    fmt.Sprintf(":%d", port),
+		Addr:    fmt.Sprintf(ip+":%d", port),
 		Handler: r,
 	}
 	return r.HTTPServer.ListenAndServe()

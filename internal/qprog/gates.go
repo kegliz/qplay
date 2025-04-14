@@ -6,7 +6,7 @@ const (
 	HGate       gateType = "H"
 	XGate       gateType = "X"
 	CNotGate    gateType = "CNot"
-	TofoliGate  gateType = "Tofoli"
+	ToffoliGate gateType = "Toffoli"
 	ZGate       gateType = "Z"
 	CZGate      gateType = "CZ"
 	Measurement gateType = "M"
@@ -62,10 +62,10 @@ func NewCZGate(control int, target int) *Gate {
 	}
 }
 
-// NewTofoliGate returns a new TofoliGate.
-func NewTofoliGate(control0 int, control1 int, target int) *Gate {
+// NewToffoliGate returns a new TofoliGate.
+func NewToffoliGate(control0 int, control1 int, target int) *Gate {
 	return &Gate{
-		Type:     TofoliGate,
+		Type:     ToffoliGate,
 		Targets:  []int{target},
 		Controls: []int{control0, control1},
 	}

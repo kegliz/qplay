@@ -9,12 +9,11 @@ import (
 
 type (
 	EngineOptions struct {
-		Debug          bool
-		TemplateFolder string
+		Debug bool
 	}
 
 	Server interface {
-		Listen(port int) error
+		Listen(port int, localOnly bool) error
 		Shutdown(ctx context.Context) error
 	}
 )
@@ -24,8 +23,7 @@ func NewLoggerAndRouter(options EngineOptions) (l *logger.Logger, r *router.Rout
 		Debug: options.Debug,
 	})
 	r = router.NewRouter(router.RouterOptions{
-		Logger:         l,
-		TemplateFolder: options.TemplateFolder,
+		Logger: l,
 	})
 	return
 }
