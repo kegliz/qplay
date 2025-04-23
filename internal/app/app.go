@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kegliz/qplay/internal/config"
-	"github.com/kegliz/qplay/internal/qservice"
 	"github.com/kegliz/qplay/internal/server/logger"
 	"github.com/kegliz/qplay/internal/server/router"
 
@@ -21,16 +20,16 @@ type (
 	}
 
 	appServer struct {
-		logger  *logger.Logger
-		router  *router.Router
-		qs      qservice.Service
+		logger *logger.Logger
+		router *router.Router
+		//qs      qservice.Service
 		version string
 	}
 
 	appServerOptions struct {
-		logger  *logger.Logger
-		router  *router.Router
-		qs      qservice.Service
+		logger *logger.Logger
+		router *router.Router
+		//qs      qservice.Service
 		version string
 	}
 )
@@ -38,9 +37,9 @@ type (
 // newAppServer creates a new appServer.
 func newAppServer(options appServerOptions) *appServer {
 	a := &appServer{
-		logger:  options.logger,
-		router:  options.router,
-		qs:      options.qs,
+		logger: options.logger,
+		router: options.router,
+		//qs:      options.qs,
 		version: options.version,
 	}
 	a.router.SetRoutes(a.routes())
@@ -67,14 +66,14 @@ func NewServer(options ServerOptions) (server.Server, error) {
 	l, r := server.NewLoggerAndRouter(server.EngineOptions{
 		Debug: options.C.GetBool("debug"),
 	})
-	qs := qservice.NewService(qservice.ServiceOptions{
-		Logger: l,
-		Store:  qservice.NewProgramStore(),
-	})
+	// qs := qservice.NewService(qservice.ServiceOptions{
+	// 	Logger: l,
+	// 	Store:  qservice.NewProgramStore(),
+	// })
 	app := newAppServer(appServerOptions{
-		logger:  l,
-		router:  r,
-		qs:      qs,
+		logger: l,
+		router: r,
+		//qs:      qs,
 		version: options.Version,
 	})
 

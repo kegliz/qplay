@@ -1,4 +1,4 @@
-FROM golang:1.22-alpine AS build
+FROM golang:1.23-alpine AS build
 # Ca-certificates is required to call HTTPS endpoints.
 RUN apk update && apk add --no-cache ca-certificates && update-ca-certificates
 
@@ -6,13 +6,13 @@ ENV USER=appuser
 ENV UID=10001
 
 RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    "${USER}"
+  --disabled-password \
+  --gecos "" \
+  --home "/nonexistent" \
+  --shell "/sbin/nologin" \
+  --no-create-home \
+  --uid "${UID}" \
+  "${USER}"
 
 WORKDIR /src/
 
