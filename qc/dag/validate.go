@@ -29,6 +29,7 @@ func acyclic(d *DAG) error {
 		if state[v] == 2 {
 			return nil
 		}
+		// start visiting
 		state[v] = 1
 		for _, ch := range d.nodes[v].children {
 			if err := dfs(ch); err != nil {

@@ -1,14 +1,12 @@
 package dag
 
 import (
-	"fmt"
-
 	"github.com/kegliz/qplay/qc/gate"
 )
 
 func (d *DAG) AddGate(g gate.Gate, qs []int) error {
 	if d.valid {
-		return fmt.Errorf("dag: already validated, no further mutation")
+		return ErrValidated
 	}
 	if err := checkGate(d.qubits, g, qs); err != nil {
 		return err
@@ -35,7 +33,7 @@ func (d *DAG) AddGate(g gate.Gate, qs []int) error {
 
 func (d *DAG) AddMeasure(q, c int) error {
 	if d.valid {
-		return fmt.Errorf("dag: already validated")
+		return ErrValidated
 	}
 	if q < 0 || q >= d.qubits {
 		return ErrBadQubit
@@ -50,7 +48,6 @@ func (d *DAG) AddMeasure(q, c int) error {
 		Cbit:   c,
 	}
 	d.nodes[n.ID] = n
-	// hazard ordering
 	if prev := d.last[q]; prev != 0 {
 		n.parents = []NodeID{prev}
 		d.nodes[prev].children = append(d.nodes[prev].children, n.ID)
