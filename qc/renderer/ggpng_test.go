@@ -5,32 +5,35 @@ import (
 	"os"
 	"testing"
 
-	"github.com/kegliz/qplay/qc/circuit"     // Import circuit
-	"github.com/kegliz/qplay/qc/dag/builder" // Import builder
-
-	// "github.com/kegliz/qplay/qc/dag" // Remove direct dag import if not needed elsewhere
-	// "github.com/kegliz/qplay/qc/gate" // Keep if specific gates needed for builder
+	"github.com/kegliz/qplay/qc/builder"
+	"github.com/kegliz/qplay/qc/circuit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// TestInterfaces ensures the DAG type implements the interfaces
+func TestInterfaces(t *testing.T) {
+	// compile-time check
+	var _ Renderer = (*GGPNG)(nil) // GGPNG implements Renderer
+}
 
 func TestGGPNG_Render(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
 	// Build circuit using Builder
-	b := builder.New(builder.Q(3), builder.C(1)) // Use builder
+	b := builder.New(builder.Q(3), builder.C(1))
 	b.H(0)
 	b.Toffoli(0, 1, 2)
 	b.Measure(2, 0) // Measure q2 into cbit 0
 
 	// Build the DAG first
-	d, err := b.Build()
+	dr, err := b.BuildDAG() // Use BuildDAG
 	require.NoError(err, "building DAG failed")
-	require.NotNil(d, "built DAG should not be nil")
+	require.NotNil(dr, "built DAG should not be nil")
 
 	// Create the Circuit from the DAG
-	c := circuit.FromDAG(d)
+	c := circuit.FromDAG(dr)
 	require.NotNil(c, "creating circuit from DAG failed")
 
 	renderer := NewRenderer(80)
@@ -42,38 +45,36 @@ func TestGGPNG_Render(t *testing.T) {
 	assert.Greater(img.Bounds().Dy(), 0, "image should not be empty")
 
 	// Test rendering an empty circuit
-	bEmpty := builder.New(builder.Q(1)) // Use builder
-	dEmpty, err := bEmpty.Build()
+	bEmpty := builder.New(builder.Q(1))
+	drEmpty, err := bEmpty.BuildDAG()
 	require.NoError(err, "building empty DAG failed")
-	require.NotNil(dEmpty, "built empty DAG should not be nil")
-	cEmpty := circuit.FromDAG(dEmpty) // Create circuit from empty DAG
+	require.NotNil(drEmpty, "built empty DAG should not be nil")
+	cEmpty := circuit.FromDAG(drEmpty)
 	require.NotNil(cEmpty, "creating circuit from empty DAG failed")
 	imgEmpty, err := renderer.Render(cEmpty)
 	assert.NoError(err)
 	require.NotNil(imgEmpty)
 	assert.Greater(imgEmpty.Bounds().Dx(), 0) // Should still have width for wires
 	assert.Greater(imgEmpty.Bounds().Dy(), 0) // Should still have height for wires
-
-	// Test rendering circuit with unsupported gate (if any were defined)
-	// For now, the default case handles unknown single-qubit gates
 }
+
 func TestGGPNG_Save(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
 	// Build circuit using Builder
-	b := builder.New(builder.Q(3), builder.C(1)) // Use builder
+	b := builder.New(builder.Q(3), builder.C(1))
 	b.H(0)
 	b.Toffoli(0, 1, 2)
 	b.Measure(2, 0)
 
 	// Build the DAG first
-	d1, err := b.Build()
+	dr1, err := b.BuildDAG() // Use BuildDAG interface
 	require.NoError(err, "building DAG 1 failed")
-	require.NotNil(d1, "built DAG 1 should not be nil")
+	require.NotNil(dr1, "built DAG 1 should not be nil")
 
 	// Create the Circuit from the DAG
-	c1 := circuit.FromDAG(d1)
+	c1 := circuit.FromDAG(dr1)
 	require.NotNil(c1, "creating circuit 1 from DAG failed")
 
 	renderer := NewRenderer(80)
@@ -91,20 +92,20 @@ func TestGGPNG_Save(t *testing.T) {
 	assert.NoError(err, "file %s should be a valid PNG", filePath1)
 
 	// Draw a more complex circuit
-	b2 := builder.New(builder.Q(3)) // Use builder
+	b2 := builder.New(builder.Q(3))
 	b2.H(0)
 	b2.CNOT(0, 1)
-	b2.CNOT(1, 2)
+	b2.CZ(1, 2) // Added CZ gate
 	b2.SWAP(0, 2)
 	b2.Fredkin(1, 0, 2) // Control q1, swap q0 and q2
 
 	// Build the DAG first
-	d2, err := b2.Build()
+	dr2, err := b2.BuildDAG() // Use BuildDAG interface
 	require.NoError(err, "building DAG 2 failed")
-	require.NotNil(d2, "built DAG 2 should not be nil")
+	require.NotNil(dr2, "built DAG 2 should not be nil")
 
 	// Create the Circuit from the DAG
-	c2 := circuit.FromDAG(d2)
+	c2 := circuit.FromDAG(dr2)
 	require.NotNil(c2, "creating circuit 2 from DAG failed")
 
 	filePath2 := "ggpng_test2.png"

@@ -11,7 +11,7 @@ type Operation struct {
 	G        gate.Gate
 	Qubits   []int // Absolute qubit indices
 	Cbit     int   // Absolute classical bit index (-1 if none)
-	TimeStep int   // Calculated layout column
+	TimeStep int   // Calculated layout column (starting at 0)
 	Line     int   // Calculated layout primary line (usually min qubit index)
 }
 
@@ -24,38 +24,56 @@ type Circuit interface {
 }
 
 type circuit struct {
-	d   *dag.DAG
-	ops []Operation // Cached operations with layout info
+	qubits  int
+	clbits  int
+	ops     []Operation // Cached operations with layout info
+	depth   int         // Number of layers (MaxStep + 1)
+	maxStep int         // Max timestep index
 }
 
-// ---------------- exported constructor -----------------
-func FromDAG(d *dag.DAG) Circuit {
-	nodes := d.Operations() // Nodes in topological order
-	ops := make([]Operation, len(nodes))
-	depth := make(map[dag.NodeID]int) // Store depth (timestep) for each node
+// FromDAG creates an immutable Circuit from a validated DAGReader.
+// It calculates the layout (TimeStep, Line) for each operation.
+func FromDAG(dr dag.DAGReader) Circuit {
+	// Get topologically sorted nodes
+	nodes := dr.Operations()
+	if nodes == nil || len(nodes) == 0 {
+		// Create an empty circuit
+		return &circuit{
+			qubits:  dr.Qubits(),
+			clbits:  dr.Clbits(),
+			ops:     []Operation{},
+			depth:   0,
+			maxStep: -1,
+		}
+	}
 
-	maxStep := 0
+	ops := make([]Operation, len(nodes))
+	// Store calculated timestep for each node ID
+	nodeTimeStep := make(map[dag.NodeID]int)
+
+	maxStep := -1
 	for i, n := range nodes {
-		// Calculate TimeStep (depth)
-		nodeDepth := 0
-		for _, pID := range n.Parents() { // Assuming Parents() method exists or accessing parents field
-			if pDepth, ok := depth[pID]; ok {
-				if pDepth+1 > nodeDepth {
-					nodeDepth = pDepth + 1
-				}
+		// Calculate TimeStep based on parents' timesteps
+		currentMaxParentStep := -1
+		for _, pID := range n.Parents() {
+			if pStep, ok := nodeTimeStep[pID]; ok && pStep > currentMaxParentStep {
+				currentMaxParentStep = pStep
 			}
 		}
-		depth[n.ID] = nodeDepth
-		if nodeDepth > maxStep {
-			maxStep = nodeDepth
+
+		// Node's timestep is 1 greater than its latest-finishing parent
+		step := currentMaxParentStep + 1
+		nodeTimeStep[n.ID] = step
+
+		if step > maxStep {
+			maxStep = step
 		}
 
 		// Calculate Line (minimum qubit index)
 		minQubit := -1
 		if len(n.Qubits) > 0 {
-			minQubit = n.Qubits[0] // Assume sorted or find min
-			// Ensure minQubit is actually the minimum
-			for _, q := range n.Qubits {
+			minQubit = n.Qubits[0]
+			for _, q := range n.Qubits[1:] {
 				if q < minQubit {
 					minQubit = q
 				}
@@ -66,12 +84,12 @@ func FromDAG(d *dag.DAG) Circuit {
 			G:        n.G,
 			Qubits:   append([]int(nil), n.Qubits...), // Copy slice
 			Cbit:     n.Cbit,
-			TimeStep: nodeDepth,
+			TimeStep: step,
 			Line:     minQubit,
 		}
 	}
 
-	// Sort operations primarily by TimeStep, secondarily by Line for consistent rendering
+	// Sort operations by TimeStep, then by Line for consistent rendering
 	sort.SliceStable(ops, func(i, j int) bool {
 		if ops[i].TimeStep != ops[j].TimeStep {
 			return ops[i].TimeStep < ops[j].TimeStep
@@ -79,33 +97,30 @@ func FromDAG(d *dag.DAG) Circuit {
 		return ops[i].Line < ops[j].Line
 	})
 
-	return &circuit{d: d, ops: ops}
+	return &circuit{
+		qubits:  dr.Qubits(),
+		clbits:  dr.Clbits(),
+		ops:     ops,
+		depth:   maxStep + 1,
+		maxStep: maxStep,
+	}
 }
 
 // ---------------- interface methods --------------------
-func (c *circuit) Qubits() int { return c.d.Qubits() }
-func (c *circuit) Clbits() int { return c.d.Clbits() }
+func (c *circuit) Qubits() int { return c.qubits }
+func (c *circuit) Clbits() int { return c.clbits }
 
-// Depth returns the number of layers/timesteps in the circuit.
 func (c *circuit) Depth() int {
-	return c.MaxStep() + 1
+	return c.depth
 }
 
-// MaxStep returns the maximum timestep index used in the circuit layout.
 func (c *circuit) MaxStep() int {
-	max := 0
-	for _, o := range c.ops {
-		if o.TimeStep > max {
-			max = o.TimeStep
-		}
-	}
-	return max
+	return c.maxStep
 }
 
 func (c *circuit) Operations() []Operation {
-	// Return the cached & sorted operations
-	return c.ops
+	// Return a copy to prevent external modification
+	result := make([]Operation, len(c.ops))
+	copy(result, c.ops)
+	return result
 }
-
-// Note: The Parents() method is expected to be defined on dag.Node within the 'dag' package.
-// The FromDAG function already relies on its existence.

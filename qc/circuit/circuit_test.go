@@ -1,32 +1,51 @@
-package circuit
+package circuit_test
 
 import (
+	"sort"
+	"strconv"
 	"testing"
 
-	"github.com/kegliz/qplay/qc/dag/builder" // Import builder
-	// "github.com/kegliz/qplay/qc/dag" // Remove direct dag import if not needed
+	"github.com/kegliz/qplay/qc/builder"
+	"github.com/kegliz/qplay/qc/circuit"
 	"github.com/kegliz/qplay/qc/gate"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
+func TestFromBuilderRoundtrip(t *testing.T) {
+	require := require.New(t)
+
+	b := builder.New(builder.Q(2))
+	b.H(0).CNOT(0, 1)
+
+	dr, err := b.BuildDAG()
+	require.NoError(err)
+
+	c := circuit.FromDAG(dr)
+
+	require.Equal(2, c.Qubits())
+	require.Equal(0, c.Clbits())
+	require.Equal(1, c.MaxStep())
+	require.Equal(2, c.Depth())
+}
+
 func TestCircuit_Properties(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	b := builder.New(builder.Q(3), builder.C(1)) // Use builder
+	b := builder.New(builder.Q(3), builder.C(1))
 	b.H(0)
 	b.CNOT(0, 1)
 	b.Toffoli(0, 1, 2)
 	b.Measure(2, 0)
 
 	// Build the DAG first
-	d, err := b.Build()
+	dr, err := b.BuildDAG() // Use BuildDAG interface
 	require.NoError(err, "building DAG failed")
-	require.NotNil(d, "built DAG should not be nil")
+	require.NotNil(dr, "built DAG should not be nil")
 
 	// Create the Circuit from the DAG
-	c := FromDAG(d) // Use FromDAG directly as we are in the circuit package
+	c := circuit.FromDAG(dr) // Use FromDAG with DAGReader
 	require.NotNil(c, "Circuit should not be nil")
 
 	assert.Equal(3, c.Qubits(), "Qubit count mismatch")
@@ -34,9 +53,6 @@ func TestCircuit_Properties(t *testing.T) {
 
 	// Depth calculation depends on the longest path in the DAG
 	// H(0) -> CNOT(0,1) -> Toffoli(0,1,2) -> Measure(2,0)
-	// Path 0: H(0) -> CNOT(0,1) -> Toffoli(0,1,2) (length 3 nodes, depth 3 layers)
-	// Path 1: CNOT(0,1) -> Toffoli(0,1,2)
-	// Path 2: Toffoli(0,1,2) -> Measure(2,0)
 	// Longest path involves 4 operations, so 4 layers/timesteps (0, 1, 2, 3)
 	// Depth = MaxStep + 1
 	assert.Equal(3, c.MaxStep(), "MaxStep mismatch")
@@ -73,48 +89,48 @@ func TestCircuit_Layout(t *testing.T) {
 	require := require.New(t)
 
 	// Circuit where gates can run in parallel
-	// H(0) | H(1)
-	// CNOT(0, 2) | X(1)
-	b := builder.New(builder.Q(3)) // Use builder
-	b.H(0)
-	b.H(1)       // Should be at timestep 0, line 1
-	b.CNOT(0, 2) // Depends on H(0), should be at timestep 1, line 0
-	b.X(1)       // Depends on H(1), should be at timestep 1, line 1
+	b := builder.New(builder.Q(3))
+	b.H(0)       // Step 0, Line 0
+	b.H(1)       // Step 0, Line 1
+	b.CNOT(0, 2) // Step 1, Line 0 (depends on H(0))
+	b.X(1)       // Step 1, Line 1 (depends on H(1))
+	b.CZ(0, 1)   // Step 2, Line 0 (depends on both paths)
 
 	// Build the DAG first
-	d, err := b.Build()
+	dr, err := b.BuildDAG() // Use BuildDAG interface
 	require.NoError(err, "building DAG failed")
-	require.NotNil(d, "built DAG should not be nil")
+	require.NotNil(dr, "built DAG should not be nil")
 
 	// Create the Circuit from the DAG
-	c := FromDAG(d)
+	c := circuit.FromDAG(dr) // Use FromDAG with DAGReader
 	require.NotNil(c)
 
 	ops := c.Operations()
-	require.Len(ops, 4)
+	require.Len(ops, 5)
 
 	// Expected layout:
 	// Step 0: H(0) [line 0], H(1) [line 1]
-	// Step 1: CNOT(0, 2) [line 0], X(1) [line 1]
+	// Step 1: CNOT(0, 2) [line 0],  X(1) [line 1]
+	// Step 2: CZ(0, 1) [line 0]
 
-	assert.Equal(1, c.MaxStep(), "MaxStep should be 1")
-	assert.Equal(2, c.Depth(), "Depth should be 2")
+	assert.Equal(2, c.MaxStep(), "MaxStep should be 2")
+	assert.Equal(3, c.Depth(), "Depth should be 3")
 
 	// Verify timestep and line for each operation
-	opMap := make(map[string]Operation)
+	opMap := make(map[string]circuit.Operation)
 	for _, op := range ops {
 		key := op.G.Name()
-		if len(op.Qubits) > 0 { // Add qubit info for uniqueness if needed
-			key += "_"
-			// Simple string conversion for keys, ensure uniqueness for test
+		if len(op.Qubits) > 0 { // Add qubit info for uniqueness
+			qubitsCopy := append([]int(nil), op.Qubits...)
+			sort.Ints(qubitsCopy)
 			qubitStr := ""
-			for i, q := range op.Qubits {
+			for i, q := range qubitsCopy {
 				if i > 0 {
 					qubitStr += ","
 				}
-				qubitStr += string(rune(q + '0'))
+				qubitStr += strconv.Itoa(q)
 			}
-			key += qubitStr
+			key += "_" + qubitStr
 		}
 		opMap[key] = op
 	}
@@ -132,7 +148,7 @@ func TestCircuit_Layout(t *testing.T) {
 	assert.Equal(1, h1.Line, "H(1) line")
 
 	// Check CNOT(0, 2)
-	cnot02, ok := opMap["CNOT_0,2"] // Adjusted key based on logic above
+	cnot02, ok := opMap["CNOT_0,2"]
 	require.True(ok, "CNOT(0, 2) not found")
 	assert.Equal(1, cnot02.TimeStep, "CNOT(0, 2) timestep")
 	assert.Equal(0, cnot02.Line, "CNOT(0, 2) line") // Line is min qubit index
@@ -142,25 +158,51 @@ func TestCircuit_Layout(t *testing.T) {
 	require.True(ok, "X(1) not found")
 	assert.Equal(1, x1.TimeStep, "X(1) timestep")
 	assert.Equal(1, x1.Line, "X(1) line")
+
+	// Check CZ(0, 1)
+	cz01, ok := opMap["CZ_0,1"]
+	require.True(ok, "CZ(0, 1) not found")
+	assert.Equal(2, cz01.TimeStep, "CZ(0, 1) timestep") // Depends on previous steps
+	assert.Equal(0, cz01.Line, "CZ(0, 1) line")
 }
 
 func TestCircuit_Empty(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
 
-	b := builder.New(builder.Q(2), builder.C(1)) // Use builder
+	b := builder.New(builder.Q(2), builder.C(1))
+
 	// Build the DAG first
-	d, err := b.Build()
+	dr, err := b.BuildDAG() // Use BuildDAG interface
 	require.NoError(err, "building empty DAG failed")
-	require.NotNil(d, "built empty DAG should not be nil")
+	require.NotNil(dr, "built empty DAG should not be nil")
 
 	// Create the Circuit from the DAG
-	c := FromDAG(d)
+	c := circuit.FromDAG(dr) // Use FromDAG with DAGReader
 	require.NotNil(c)
 
 	assert.Equal(2, c.Qubits())
 	assert.Equal(1, c.Clbits())
-	assert.Equal(-1, c.MaxStep()) // MaxStep is -1 for empty circuit (no operations)
-	assert.Equal(0, c.Depth())    // Depth is 0 (MaxStep + 1)
+	assert.Equal(-1, c.MaxStep()) // MaxStep is -1 for empty circuit
+	assert.Equal(0, c.Depth())    // Depth is 0 for empty circuit
 	assert.Empty(c.Operations())
+}
+
+func TestCircuit_FromBuildCircuit(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	b := builder.New(builder.Q(3), builder.C(1))
+	b.H(0)
+	b.CNOT(0, 1)
+	b.Toffoli(0, 1, 2)
+	b.Measure(2, 0)
+
+	// Build the Circuit directly
+	c, err := b.BuildCircuit()
+	require.NoError(err, "building circuit failed")
+	require.NotNil(c, "built circuit should not be nil")
+
+	assert.Equal(3, c.Qubits(), "Qubit count mismatch")
+	assert.Equal(1, c.Clbits(), "Classical bit count mismatch")
 }

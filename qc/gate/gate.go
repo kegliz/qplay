@@ -22,12 +22,17 @@ func Factory(name string) (Gate, error) {
 		return H(), nil
 	case "x":
 		return X(), nil
+	case "z": // Added Z alias for completeness, assuming it exists or will be added
+		// return Z(), nil // Assuming Z gate exists
+		return nil, ErrUnknownGate{"Z"} // Placeholder if Z doesn't exist yet
 	case "s":
 		return S(), nil
 	case "swap":
 		return Swap(), nil
 	case "cx", "cnot":
 		return CNOT(), nil
+	case "cz": // Added CZ alias
+		return CZ(), nil
 	case "t", "toffoli", "ccx":
 		return Toffoli(), nil
 	case "fredkin", "cswap":

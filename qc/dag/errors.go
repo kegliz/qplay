@@ -9,6 +9,7 @@ var (
 	ErrSpan     = fmt.Errorf("builder: gate spans invalid qubit range")
 	ErrBuild    = fmt.Errorf("builder: cannot build due to previous error")
 )
+
 var (
 	ErrValidated = fmt.Errorf("dag: already validated, no further mutation")
 )

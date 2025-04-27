@@ -8,14 +8,16 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// Assuming Option, Q, C are now defined in the dag package
-// type Option func(*DAG)
-// func Q(n int) Option { ... }
-// func C(n int) Option { ... }
+// TestInterfaces ensures the DAG type implements the interfaces
+func TestInterfaces(t *testing.T) {
+	// Compile-time checks
+	var _ DAGBuilder = (*DAG)(nil)
+	var _ DAGReader = (*DAG)(nil)
+}
 
 func TestDAG_New(t *testing.T) {
 	assert := assert.New(t)
-	d := New(5, 2) // Use direct integer arguments
+	d := New(5, 2)
 	assert.NotNil(d)
 	assert.Equal(5, d.Qubits())
 	assert.Equal(2, d.Clbits())
@@ -100,7 +102,7 @@ func TestDAG_AddGate(t *testing.T) {
 func TestDAG_AddMeasure(t *testing.T) {
 	assert := assert.New(t)
 	require := require.New(t)
-	d := New(2, 1) // Use direct integer arguments
+	d := New(2, 1)
 
 	// Add H(0)
 	err := d.AddGate(gate.H(), []int{0})
@@ -148,16 +150,17 @@ func TestDAG_AddMeasure(t *testing.T) {
 
 func TestDAG_Validate_Success(t *testing.T) {
 	require := require.New(t)
-	d := New(2, 0) // Use direct integer arguments
+	assert := assert.New(t)
+	d := New(2, 0)
 	d.AddGate(gate.H(), []int{0})
 	d.AddGate(gate.CNOT(), []int{0, 1})
 	err := d.Validate()
 	require.NoError(err)
-	assert.True(t, d.valid)
+	assert.True(d.valid)
 	// Validate again should be no-op
 	err = d.Validate()
 	require.NoError(err)
-	assert.True(t, d.valid)
+	assert.True(d.valid)
 }
 
 func TestDAG_TopoSort_Depth_Operations(t *testing.T) {
@@ -166,7 +169,7 @@ func TestDAG_TopoSort_Depth_Operations(t *testing.T) {
 	// H(0) --- CNOT(0,1) --- X(1)
 	//          |
 	// H(2) ----+  (CNOT depends on H(0) and H(2))
-	d := New(3, 0) // Use direct integer arguments
+	d := New(3, 0)
 
 	err := d.AddGate(gate.H(), []int{0}) // id 1 (assume) -> nodeA
 	require.NoError(err)
@@ -223,12 +226,12 @@ func TestDAG_TopoSort_Depth_Operations(t *testing.T) {
 	// Expected Depth: 3 (layers: {A,B}, {C}, {D}) -> MaxStep = 2, Depth = 3
 	// Expected Operations: Nodes in topological order
 
-	order := d.TopoSort()
+	order := d.calculateTopoSort()
 	assert.Len(order, 4)
 	// Check if A and B appear before C, and C before D
 	posA, posB, posC, posD := -1, -1, -1, -1 // Corrected initialization
-	for i, id := range order {
-		switch id {
+	for i, node := range order {
+		switch node.ID {
 		case nodeA.ID:
 			posA = i
 		case nodeB.ID:
@@ -255,10 +258,10 @@ func TestDAG_TopoSort_Depth_Operations(t *testing.T) {
 
 	ops := d.Operations()
 	require.Len(ops, 4)
-	assert.Equal(order[0], ops[0].ID)
-	assert.Equal(order[1], ops[1].ID)
-	assert.Equal(order[2], ops[2].ID)
-	assert.Equal(order[3], ops[3].ID)
+	assert.Equal(order[0].ID, ops[0].ID)
+	assert.Equal(order[1].ID, ops[1].ID)
+	assert.Equal(order[2].ID, ops[2].ID)
+	assert.Equal(order[3].ID, ops[3].ID)
 }
 
 // TestCycleDetect uses the existing test logic but ensures it uses AddGate

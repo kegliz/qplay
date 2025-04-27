@@ -12,14 +12,28 @@ import (
 	"github.com/kegliz/qplay/qc/gate"
 )
 
+// ─── ggPNG renderer ──────────────────────────────────────────────────────
+// GGPNG is a renderer that uses the gg library to create PNG images of quantum circuits.
+// It draws the circuit operations and wires based on the provided circuit data.
+
 type GGPNG struct{ Cell float64 }
 
 // NewRenderer returns a renderer that emits lossless PNGs using gg.
 func NewRenderer(cellPx int) GGPNG { return GGPNG{Cell: float64(cellPx)} }
 
-func (r GGPNG) Render(c circuit.Circuit) (image.Image, error) { // Changed CircuitStruct to Circuit
-	w := int(float64(c.MaxStep()+1) * r.Cell)
+func (r GGPNG) Render(c circuit.Circuit) (image.Image, error) {
+	// Ensure minimum width for drawing wires even if circuit is empty (MaxStep = -1)
+	steps := c.MaxStep() + 1
+	if steps < 1 {
+		steps = 1 // Minimum 1 step width to show wires
+	}
+	w := int(float64(steps) * r.Cell)
 	h := int(float64(c.Qubits()) * r.Cell)
+
+	// Handle edge cases
+	if h <= 0 {
+		h = int(r.Cell) // Minimum height if no qubits
+	}
 
 	dc := gg.NewContext(w, h)
 	dc.SetRGB(1, 1, 1) // white background
@@ -47,6 +61,8 @@ func (r GGPNG) Render(c circuit.Circuit) (image.Image, error) { // Changed Circu
 		switch op.G.Name() {
 		case "CNOT":
 			r.drawCNOT(dc, op)
+		case "CZ": // Added CZ case
+			r.drawCZ(dc, op)
 		case "FREDKIN":
 			r.drawFredkin(dc, op)
 		case "SWAP":
@@ -203,6 +219,38 @@ func (r GGPNG) drawCNOT(dc *gg.Context, op circuit.Operation) {
 	dc.DrawLine(x-r.Cell*0.18, targetY, x+r.Cell*0.18, targetY)
 	dc.Stroke()
 	dc.DrawLine(x, targetY-r.Cell*0.18, x, targetY+r.Cell*0.18)
+	dc.Stroke()
+}
+
+// drawCZ draws the Controlled-Z gate.
+// It consists of a control dot and a target dot connected by a vertical line.
+func (r GGPNG) drawCZ(dc *gg.Context, op circuit.Operation) {
+	if len(op.Qubits) != 2 {
+		fmt.Printf("Renderer warning: CZ gate at step %d does not have 2 qubits: %v\n", op.TimeStep, op.Qubits)
+		return
+	} // Expect 2 qubits
+	col := op.TimeStep
+	// Based on gate.CZ() Controls=[0], Target=[1] relative indices.
+	// op.Qubits = [abs_q_control, abs_q_target]
+	// Builder: b.add2(gate.CZ(), c, t) -> []int{c, t}
+	controlLine := op.Qubits[0]
+	targetLine := op.Qubits[1]
+
+	x := r.x(col)
+	yCtrl := r.y(controlLine)
+	yTgt := r.y(targetLine)
+
+	// Control dot ●
+	dc.SetRGB(0, 0, 0)
+	dc.DrawCircle(x, yCtrl, r.Cell*0.12)
+	dc.Fill()
+
+	// Target dot ●
+	dc.DrawCircle(x, yTgt, r.Cell*0.12)
+	dc.Fill()
+
+	// Vertical wire connecting control and target
+	dc.DrawLine(x, yCtrl, x, yTgt)
 	dc.Stroke()
 }
 
