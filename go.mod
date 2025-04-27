@@ -7,6 +7,7 @@ toolchain go1.23.8
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
+	github.com/itsubaki/q v0.0.5 // Added dependency
 	github.com/rs/zerolog v1.34.0
 	github.com/spf13/viper v1.20.1
 	github.com/stretchr/testify v1.10.0
@@ -14,7 +15,6 @@ require (
 
 require (
 	github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0 // indirect
-	github.com/itsubaki/q v0.0.5 // indirect
 	golang.org/x/image v0.26.0 // indirect
 )
 
