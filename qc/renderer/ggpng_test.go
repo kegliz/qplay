@@ -27,14 +27,9 @@ func TestGGPNG_Render(t *testing.T) {
 	b.Toffoli(0, 1, 2)
 	b.Measure(2, 0) // Measure q2 into cbit 0
 
-	// Build the DAG first
-	dr, err := b.BuildDAG() // Use BuildDAG
-	require.NoError(err, "building DAG failed")
-	require.NotNil(dr, "built DAG should not be nil")
-
-	// Create the Circuit from the DAG
-	c := circuit.FromDAG(dr)
-	require.NotNil(c, "creating circuit from DAG failed")
+	c, err := b.BuildCircuit() // Use BuildCircuit interface
+	require.NoError(err, "building circuit failed")
+	require.NotNil(c, "built circuit should not be nil")
 
 	renderer := NewRenderer(80)
 	img, err := renderer.Render(c)
@@ -68,14 +63,10 @@ func TestGGPNG_Save(t *testing.T) {
 	b.Toffoli(0, 1, 2)
 	b.Measure(2, 0)
 
-	// Build the DAG first
-	dr1, err := b.BuildDAG() // Use BuildDAG interface
-	require.NoError(err, "building DAG 1 failed")
-	require.NotNil(dr1, "built DAG 1 should not be nil")
-
-	// Create the Circuit from the DAG
-	c1 := circuit.FromDAG(dr1)
-	require.NotNil(c1, "creating circuit 1 from DAG failed")
+	// Build the circuit first
+	c1, err := b.BuildCircuit() // Use BuildCircuit interface
+	require.NoError(err, "building circuit 1 failed")
+	require.NotNil(c1, "built circuit should not be nil")
 
 	renderer := NewRenderer(80)
 	filePath1 := "ggpng_test1.png"
@@ -99,14 +90,10 @@ func TestGGPNG_Save(t *testing.T) {
 	b2.SWAP(0, 2)
 	b2.Fredkin(1, 0, 2) // Control q1, swap q0 and q2
 
-	// Build the DAG first
-	dr2, err := b2.BuildDAG() // Use BuildDAG interface
-	require.NoError(err, "building DAG 2 failed")
-	require.NotNil(dr2, "built DAG 2 should not be nil")
-
-	// Create the Circuit from the DAG
-	c2 := circuit.FromDAG(dr2)
-	require.NotNil(c2, "creating circuit 2 from DAG failed")
+	// Build the circuit first
+	c2, err := b2.BuildCircuit() // Use BuildCircuit interface
+	require.NoError(err, "building circuit 2 failed")
+	require.NotNil(c2, "built circuit 2 should not be nil")
 
 	filePath2 := "ggpng_test2.png"
 	//defer os.Remove(filePath2) // Clean up
