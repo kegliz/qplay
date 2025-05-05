@@ -102,6 +102,7 @@ func simulateGrover3Qubit(shots int) {
 	b.Measure(0, 0).Measure(1, 1).Measure(2, 2)
 
 	c, err := b.BuildCircuit()
+
 	if err != nil {
 		fmt.Printf("Error building 3-qubit Grover circuit: %v\n", err)
 		return

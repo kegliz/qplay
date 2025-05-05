@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/kegliz/qplay/qc/builder"
+	"github.com/kegliz/qplay/qc/renderer"
 	"github.com/kegliz/qplay/qc/simulator/itsu"
 )
 
@@ -27,8 +28,8 @@ func complexCircuit(numQubits int) builder.Builder {
 	return b
 }
 
-const shots = 4096
-const numBenchmarkQubits = 10 // Use 10 qubits for benchmarks
+const shots = 1024 * 8 // Number of shots for the benchmark
+const numBenchmarkQubits = 6
 
 func BenchmarkSerial(b *testing.B) {
 	build := complexCircuit(numBenchmarkQubits) // Use complex circuit
@@ -37,12 +38,20 @@ func BenchmarkSerial(b *testing.B) {
 		b.Fatalf("build error: %v", err)
 	}
 
+	renderer := renderer.NewRenderer(80)
+	filePath1 := "benchmark.png"
+	//defer os.Remove(filePath1) // Clean up
+
+	err = renderer.Save(filePath1, circ) // Save first circuit
+	if err != nil {
+		b.Fatalf("image save error: %v", err)
+	}
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
 	for i := 0; i < b.N; i++ {
 		sim := itsu.New(shots)
-		sim.Workers = 1 // force single‑thread
-		if _, err := sim.Run(circ); err != nil {
+		// No need to set Workers = 1, just call RunSerial
+		if _, err := sim.RunSerial(circ); err != nil { // Use RunSerial
 			b.Fatalf("run error: %v", err)
 		}
 	}
