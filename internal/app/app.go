@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kegliz/qplay/internal/config"
-	"github.com/kegliz/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/logger"
 	"github.com/kegliz/qplay/internal/server/router"
 
 	"github.com/kegliz/qplay/internal/server"

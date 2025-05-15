@@ -1,12 +1,13 @@
-package itsu_test
+package itsu
 
 import (
-	"runtime"
+	"runtime" // Added runtime import
 	"testing"
 
 	"github.com/kegliz/qplay/qc/builder"
 	"github.com/kegliz/qplay/qc/renderer"
-	"github.com/kegliz/qplay/qc/simulator/itsu"
+	"github.com/kegliz/qplay/qc/simulator"
+	//"github.com/kegliz/qplay/qc/simulator/itsu"
 )
 
 // complexCircuit creates a moderately complex circuit for benchmarking.
@@ -29,10 +30,10 @@ func complexCircuit(numQubits int) builder.Builder {
 }
 
 const shots = 1024 * 8 // Number of shots for the benchmark
-const numBenchmarkQubits = 6
+const numBenchmarkQubits = 7
 
 func BenchmarkSerial(b *testing.B) {
-	build := complexCircuit(numBenchmarkQubits) // Use complex circuit
+	build := complexCircuit(numBenchmarkQubits)
 	circ, err := build.BuildCircuit()
 	if err != nil {
 		b.Fatalf("build error: %v", err)
@@ -49,29 +50,68 @@ func BenchmarkSerial(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
 	for i := 0; i < b.N; i++ {
-		sim := itsu.New(shots)
-		// No need to set Workers = 1, just call RunSerial
-		if _, err := sim.RunSerial(circ); err != nil { // Use RunSerial
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: 0, Runner: NewItsuOneShotRunner()}) // Added Workers
+		sim.SetVerbose(true)
+		if _, err := sim.RunSerial(circ); err != nil {
 			b.Fatalf("run error: %v", err)
 		}
 	}
 }
 
 func BenchmarkParallel(b *testing.B) {
-	build := complexCircuit(numBenchmarkQubits) // Use complex circuit
+	build := complexCircuit(numBenchmarkQubits)
 	circ, err := build.BuildCircuit()
 	if err != nil {
 		b.Fatalf("build error: %v", err)
 	}
 
-	workers := runtime.NumCPU()
+	b.ReportAllocs()
+	b.ResetTimer() // Reset timer after setup
+	for i := 0; i < b.N; i++ {
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: runtime.NumCPU(), Runner: NewItsuOneShotRunner()}) // Added Workers
+		sim.SetVerbose(true)
+		// s.Workers is set by New, no need to set it again here
+		if _, err := sim.RunParallelChan(circ); err != nil {
+			b.Fatalf("run error: %v", err)
+		}
+	}
+}
+
+// BenchmarkParallelStatic is a benchmark for the static partitioning of the parallel run.
+func BenchmarkParallelStatic(b *testing.B) {
+	build := complexCircuit(numBenchmarkQubits)
+	circ, err := build.BuildCircuit()
+	if err != nil {
+		b.Fatalf("build error: %v", err)
+	}
 
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
 	for i := 0; i < b.N; i++ {
-		sim := itsu.New(shots)
-		sim.Workers = workers
-		if _, err := sim.Run(circ); err != nil {
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: runtime.NumCPU(), Runner: NewItsuOneShotRunner()}) // Added Workers
+		sim.SetVerbose(true)
+		// s.Workers is set by New, no need to set it again here
+		if _, err := sim.RunParallelStatic(circ); err != nil {
+			b.Fatalf("run error: %v", err)
+		}
+	}
+}
+
+// BenchmarkParallelStatic is a benchmark for the static partitioning of the parallel run.
+func BenchmarkPooledParallelStatic(b *testing.B) {
+	build := complexCircuit(numBenchmarkQubits)
+	circ, err := build.BuildCircuit()
+	if err != nil {
+		b.Fatalf("build error: %v", err)
+	}
+
+	b.ReportAllocs()
+	b.ResetTimer() // Reset timer after setup
+	for i := 0; i < b.N; i++ {
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: runtime.NumCPU(), Runner: NewPooledItsuOneShotRunner()}) // Added Workers
+		sim.SetVerbose(true)
+		// s.Workers is set by New, no need to set it again here
+		if _, err := sim.RunParallelStatic(circ); err != nil {
 			b.Fatalf("run error: %v", err)
 		}
 	}

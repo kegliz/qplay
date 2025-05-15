@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kegliz/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/logger"
 	"github.com/stretchr/testify/suite"
 )
 

@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kegliz/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/logger"
 )
 
 type (

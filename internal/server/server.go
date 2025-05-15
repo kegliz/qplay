@@ -3,7 +3,7 @@ package server
 import (
 	"context"
 
-	"github.com/kegliz/qplay/internal/server/logger"
+	"github.com/kegliz/qplay/internal/logger"
 	"github.com/kegliz/qplay/internal/server/router"
 )
 

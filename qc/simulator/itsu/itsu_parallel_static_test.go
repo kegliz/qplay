@@ -5,12 +5,13 @@ import (
 	"testing"
 
 	"github.com/kegliz/qplay/qc/builder"
+	"github.com/kegliz/qplay/qc/simulator"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 // pretty prints the histogram in a deterministic, sorted order
-func pretty(t *testing.T, hist map[string]int, shots int) {
+func prettyPS(t *testing.T, hist map[string]int, shots int) {
 	keys := make([]string, 0, len(hist))
 	for k := range hist {
 		keys = append(keys, k)
@@ -26,7 +27,7 @@ func pretty(t *testing.T, hist map[string]int, shots int) {
 }
 
 // TestBellState prepares the |Φ⁺⟩ Bell state and checks ~50/50 statistics.
-func TestBellState(t *testing.T) {
+func TestBellStatePS(t *testing.T) {
 	shots := 2048
 	b := builder.New(builder.Q(2), builder.C(2))
 	b.H(0).CNOT(0, 1).Measure(0, 0).Measure(1, 1)
@@ -34,11 +35,11 @@ func TestBellState(t *testing.T) {
 	c, err := b.BuildCircuit()
 	require.NoError(t, err)
 
-	sim := New(shots)
-	hist, err := sim.Run(c)
+	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
+	hist, err := sim.RunParallelStatic(c)
 	require.NoError(t, err)
 
-	pretty(t, hist, shots)
+	prettyPS(t, hist, shots)
 
 	assert.InDelta(t, 0.5, float64(hist["00"])/float64(shots), 0.1)
 	assert.InDelta(t, 0.5, float64(hist["11"])/float64(shots), 0.1)
@@ -48,7 +49,7 @@ func TestBellState(t *testing.T) {
 
 // TestGrover2Qubit demonstrates one Grover iteration on 2‑qubit search space
 // amplifying the |11⟩ state.
-func TestGrover2Qubit(t *testing.T) {
+func TestGrover2QubitPS(t *testing.T) {
 	shots := 1024
 	b := builder.New(builder.Q(2), builder.C(2))
 
@@ -71,16 +72,16 @@ func TestGrover2Qubit(t *testing.T) {
 	c, err := b.BuildCircuit()
 	require.NoError(t, err)
 
-	sim := New(shots)
-	hist, err := sim.Run(c)
+	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
+	hist, err := sim.RunParallelStatic(c)
 	require.NoError(t, err)
 
-	pretty(t, hist, shots)
+	prettyPS(t, hist, shots)
 
 	assert.Greater(t, hist["11"], int(0.75*float64(shots)), "Grover did not amplify |11⟩ sufficiently")
 }
 
-func TestGrover3Qubit(t *testing.T) {
+func TestGrover3QubitPS(t *testing.T) {
 	shots := 1024
 	b := builder.New(builder.Q(3), builder.C(3))
 
@@ -106,11 +107,11 @@ func TestGrover3Qubit(t *testing.T) {
 	c, err := b.BuildCircuit()
 	require.NoError(t, err)
 
-	sim := New(shots)
-	hist, err := sim.Run(c)
+	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
+	hist, err := sim.RunParallelStatic(c)
 	require.NoError(t, err)
 
-	pretty(t, hist, shots)
+	prettyPS(t, hist, shots)
 
 	assert.Greater(t, hist["111"], int(0.75*float64(shots)), "Grover did not amplify |111⟩ sufficiently")
 }

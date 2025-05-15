@@ -5,6 +5,7 @@ import (
 	"sort" // Import the sort package
 
 	"github.com/kegliz/qplay/qc/builder"
+	"github.com/kegliz/qplay/qc/simulator"
 	"github.com/kegliz/qplay/qc/simulator/itsu"
 )
 
@@ -30,7 +31,7 @@ func simulateBellState(shots int) {
 		return
 	}
 
-	sim := itsu.New(shots)
+	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: itsu.NewItsuOneShotRunner()})
 	hist, err := sim.Run(c)
 	if err != nil {
 		fmt.Printf("Error running Bell state simulation: %v\n", err)
@@ -67,7 +68,7 @@ func simulateGrover2Qubit(shots int) {
 		return
 	}
 
-	sim := itsu.New(shots)
+	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: itsu.NewItsuOneShotRunner()})
 	hist, err := sim.Run(c)
 	if err != nil {
 		fmt.Printf("Error running 2-qubit Grover simulation: %v\n", err)
@@ -108,7 +109,7 @@ func simulateGrover3Qubit(shots int) {
 		return
 	}
 
-	sim := itsu.New(shots)
+	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: itsu.NewItsuOneShotRunner()})
 	hist, err := sim.Run(c)
 	if err != nil {
 		fmt.Printf("Error running 3-qubit Grover simulation: %v\n", err)

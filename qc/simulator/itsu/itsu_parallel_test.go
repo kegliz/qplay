@@ -11,15 +11,14 @@ import (
 )
 
 // pretty prints the histogram in a deterministic, sorted order
-// (Copied from itsu_test.go for use in serial tests)
-func prettySerial(t *testing.T, hist map[string]int, shots int) {
+func prettyPCh(t *testing.T, hist map[string]int, shots int) {
 	keys := make([]string, 0, len(hist))
 	for k := range hist {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
 
-	t.Log("Histogram (Serial) (key : count / %):")
+	t.Log("Histogram (key : count / %):")
 	for _, k := range keys {
 		c := hist[k]
 		pct := 100 * float64(c) / float64(shots)
@@ -27,9 +26,9 @@ func prettySerial(t *testing.T, hist map[string]int, shots int) {
 	}
 }
 
-// TestBellStateSerial prepares the |Φ⁺⟩ Bell state and checks ~50/50 statistics using RunSerial.
-func TestBellStateSerial(t *testing.T) {
-	shots := 1024
+// TestBellState prepares the |Φ⁺⟩ Bell state and checks ~50/50 statistics.
+func TestBellStatePCh(t *testing.T) {
+	shots := 2048
 	b := builder.New(builder.Q(2), builder.C(2))
 	b.H(0).CNOT(0, 1).Measure(0, 0).Measure(1, 1)
 
@@ -37,11 +36,10 @@ func TestBellStateSerial(t *testing.T) {
 	require.NoError(t, err)
 
 	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
-	// Call RunSerial instead of Run
-	hist, err := sim.RunSerial(c)
+	hist, err := sim.RunParallelChan(c)
 	require.NoError(t, err)
 
-	prettySerial(t, hist, shots) // Use the local pretty printer
+	prettyPCh(t, hist, shots)
 
 	assert.InDelta(t, 0.5, float64(hist["00"])/float64(shots), 0.1)
 	assert.InDelta(t, 0.5, float64(hist["11"])/float64(shots), 0.1)
@@ -49,9 +47,9 @@ func TestBellStateSerial(t *testing.T) {
 	assert.Equal(t, 0, hist["10"], "unexpected outcome 10")
 }
 
-// TestGrover2QubitSerial demonstrates one Grover iteration on 2‑qubit search space
-// amplifying the |11⟩ state using RunSerial.
-func TestGrover2QubitSerial(t *testing.T) {
+// TestGrover2Qubit demonstrates one Grover iteration on 2‑qubit search space
+// amplifying the |11⟩ state.
+func TestGrover2QubitPCh(t *testing.T) {
 	shots := 1024
 	b := builder.New(builder.Q(2), builder.C(2))
 
@@ -75,18 +73,15 @@ func TestGrover2QubitSerial(t *testing.T) {
 	require.NoError(t, err)
 
 	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
-	// Call RunSerial instead of Run
-	hist, err := sim.RunSerial(c)
+	hist, err := sim.RunParallelChan(c)
 	require.NoError(t, err)
 
-	prettySerial(t, hist, shots) // Use the local pretty printer
+	prettyPCh(t, hist, shots)
 
 	assert.Greater(t, hist["11"], int(0.75*float64(shots)), "Grover did not amplify |11⟩ sufficiently")
 }
 
-// TestGrover3QubitSerial demonstrates one Grover iteration on 3‑qubit search space
-// amplifying the |111⟩ state using RunSerial.
-func TestGrover3QubitSerial(t *testing.T) {
+func TestGrover3QubitPCh(t *testing.T) {
 	shots := 1024
 	b := builder.New(builder.Q(3), builder.C(3))
 
@@ -94,12 +89,15 @@ func TestGrover3QubitSerial(t *testing.T) {
 	b.H(0).H(1).H(2)
 
 	// — oracle marks |111⟩ by phase flip (CCZ) —
+	// Implement CCZ using H and Toffoli: H(target) Toffoli(c1, c2, target) H(target)
 	b.H(2).Toffoli(0, 1, 2).H(2)
 
 	// — diffusion operator (3 qubits) —
+	// HHH - XXX - CCZ - XXX - HHH
 	b.H(0).H(1).H(2)
 	b.X(0).X(1).X(2)
-	b.H(2).Toffoli(0, 1, 2).H(2) // CCZ
+	// CCZ
+	b.H(2).Toffoli(0, 1, 2).H(2)
 	b.X(0).X(1).X(2)
 	b.H(0).H(1).H(2)
 
@@ -110,11 +108,10 @@ func TestGrover3QubitSerial(t *testing.T) {
 	require.NoError(t, err)
 
 	sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
-	// Call RunSerial instead of Run
-	hist, err := sim.RunSerial(c)
+	hist, err := sim.RunParallelChan(c)
 	require.NoError(t, err)
 
-	prettySerial(t, hist, shots) // Use the local pretty printer
+	prettyPCh(t, hist, shots)
 
 	assert.Greater(t, hist["111"], int(0.75*float64(shots)), "Grover did not amplify |111⟩ sufficiently")
 }
