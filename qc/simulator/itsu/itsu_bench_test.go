@@ -1,7 +1,6 @@
 package itsu
 
 import (
-	"runtime" // Added runtime import
 	"testing"
 
 	"github.com/kegliz/qplay/qc/builder"
@@ -50,7 +49,7 @@ func BenchmarkSerial(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
 	for i := 0; i < b.N; i++ {
-		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: 0, Runner: NewItsuOneShotRunner()}) // Added Workers
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
 		sim.SetVerbose(true)
 		if _, err := sim.RunSerial(circ); err != nil {
 			b.Fatalf("run error: %v", err)
@@ -68,7 +67,7 @@ func BenchmarkParallel(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
 	for i := 0; i < b.N; i++ {
-		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: runtime.NumCPU(), Runner: NewItsuOneShotRunner()}) // Added Workers
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
 		sim.SetVerbose(true)
 		// s.Workers is set by New, no need to set it again here
 		if _, err := sim.RunParallelChan(circ); err != nil {
@@ -88,27 +87,7 @@ func BenchmarkParallelStatic(b *testing.B) {
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
 	for i := 0; i < b.N; i++ {
-		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: runtime.NumCPU(), Runner: NewItsuOneShotRunner()}) // Added Workers
-		sim.SetVerbose(true)
-		// s.Workers is set by New, no need to set it again here
-		if _, err := sim.RunParallelStatic(circ); err != nil {
-			b.Fatalf("run error: %v", err)
-		}
-	}
-}
-
-// BenchmarkParallelStatic is a benchmark for the static partitioning of the parallel run.
-func BenchmarkPooledParallelStatic(b *testing.B) {
-	build := complexCircuit(numBenchmarkQubits)
-	circ, err := build.BuildCircuit()
-	if err != nil {
-		b.Fatalf("build error: %v", err)
-	}
-
-	b.ReportAllocs()
-	b.ResetTimer() // Reset timer after setup
-	for i := 0; i < b.N; i++ {
-		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Workers: runtime.NumCPU(), Runner: NewPooledItsuOneShotRunner()}) // Added Workers
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
 		sim.SetVerbose(true)
 		// s.Workers is set by New, no need to set it again here
 		if _, err := sim.RunParallelStatic(circ); err != nil {
