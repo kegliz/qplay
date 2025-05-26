@@ -52,7 +52,7 @@ func (r GGPNG) Render(c circuit.Circuit) (image.Image, error) {
 	for _, op := range c.Operations() {
 		// Handle standard single-qubit box gates first
 		switch op.G.Name() {
-		case "H", "X", "Z", "S":
+		case "H", "X", "Y", "Z", "S":
 			r.drawBoxGate(dc, op)
 			continue // Move to next operation
 		}

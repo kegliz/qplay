@@ -1,6 +1,7 @@
 package simulator
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/kegliz/qplay/internal/logger"
@@ -67,4 +68,23 @@ type OneShotRunner interface {
 // Run defaults to RunParallelStatic.
 func (s *Simulator) Run(c circuit.Circuit) (map[string]int, error) {
 	return s.RunParallelStatic(c)
+}
+
+// NewSimulatorWithRunner creates a simulator using a named runner from the plugin registry.
+func NewSimulatorWithRunner(runnerName string, options SimulatorOptions) (*Simulator, error) {
+	runner, err := CreateRunner(runnerName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create runner %q: %w", runnerName, err)
+	}
+
+	options.Runner = runner
+	return NewSimulator(options), nil
+}
+
+// NewSimulatorWithDefaults creates a simulator with default settings using a named runner.
+func NewSimulatorWithDefaults(runnerName string) (*Simulator, error) {
+	return NewSimulatorWithRunner(runnerName, SimulatorOptions{
+		Shots:   1024,
+		Workers: 0, // Will default to runtime.NumCPU()
+	})
 }

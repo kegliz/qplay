@@ -13,7 +13,9 @@ type Builder interface {
 	// Single-qubit gates
 	H(q int) Builder
 	X(q int) Builder
+	Y(q int) Builder
 	S(q int) Builder
+	Z(q int) Builder
 
 	// Multi-qubit gates
 	CNOT(ctrl, tgt int) Builder
@@ -66,7 +68,9 @@ func (b *b) checkState() bool {
 
 func (b *b) H(q int) Builder               { return b.add1(gate.H(), q) }
 func (b *b) X(q int) Builder               { return b.add1(gate.X(), q) }
+func (b *b) Y(q int) Builder               { return b.add1(gate.Y(), q) }
 func (b *b) S(q int) Builder               { return b.add1(gate.S(), q) }
+func (b *b) Z(q int) Builder               { return b.add1(gate.Z(), q) }
 func (b *b) CNOT(c, t int) Builder         { return b.add2(gate.CNOT(), c, t) }
 func (b *b) CZ(c, t int) Builder           { return b.add2(gate.CZ(), c, t) }
 func (b *b) SWAP(q1, q2 int) Builder       { return b.add2(gate.Swap(), q1, q2) }

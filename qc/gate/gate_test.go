@@ -19,6 +19,8 @@ func TestBuiltinGates(t *testing.T) {
 	}{
 		{"Hadamard", H(), "H", 1, "H", []int{0}, []int{}},
 		{"PauliX", X(), "X", 1, "X", []int{0}, []int{}},
+		{"PauliY", Y(), "Y", 1, "Y", []int{0}, []int{}},
+		{"PauliZ", Z(), "Z", 1, "Z", []int{0}, []int{}},
 		{"PhaseS", S(), "S", 1, "S", []int{0}, []int{}},
 		{"Measure", Measure(), "MEASURE", 1, "M", []int{0}, []int{}},
 		{"SWAP", Swap(), "SWAP", 2, "×", []int{0, 1}, []int{}},
@@ -51,6 +53,8 @@ func TestFactory(t *testing.T) {
 		{"h", H()},
 		{" H ", H()}, // Test trimming/normalization
 		{"x", X()},
+		{"y", Y()},
+		{"z", Z()},
 		{"s", S()},
 		{"swap", Swap()},
 		{"SWAP", Swap()},

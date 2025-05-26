@@ -3,13 +3,54 @@ package renderer
 import (
 	"image/png"
 	"os"
+	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/kegliz/qplay/qc/builder"
 	"github.com/kegliz/qplay/qc/circuit"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
+
+// Test constants for better maintainability
+const (
+	defaultTestTimeout = 10 * time.Second
+	defaultCellSize    = 80
+)
+
+// tempTestFile creates a temporary test file and returns cleanup function
+func tempTestFile(t *testing.T, filename string) (string, func()) {
+	t.Helper()
+
+	tempDir := t.TempDir() // Automatically cleaned up by Go
+	fullPath := filepath.Join(tempDir, filename)
+
+	cleanup := func() {
+		if _, err := os.Stat(fullPath); err == nil {
+			os.Remove(fullPath)
+		}
+	}
+
+	return fullPath, cleanup
+}
+
+// withTimeout runs a function with timeout
+func withTimeout(t *testing.T, timeout time.Duration, fn func() error) {
+	t.Helper()
+
+	done := make(chan error, 1)
+	go func() {
+		done <- fn()
+	}()
+
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(timeout):
+		t.Fatalf("operation timed out after %v", timeout)
+	}
+}
 
 // TestInterfaces ensures the DAG type implements the interfaces
 func TestInterfaces(t *testing.T) {
@@ -69,8 +110,8 @@ func TestGGPNG_Save(t *testing.T) {
 	require.NotNil(c1, "built circuit should not be nil")
 
 	renderer := NewRenderer(80)
-	filePath1 := "ggpng_test1.png"
-	//defer os.Remove(filePath1) // Clean up
+	filePath1, cleanup1 := tempTestFile(t, "ggpng_test1.png")
+	defer cleanup1()
 
 	err = renderer.Save(filePath1, c1) // Save first circuit
 	assert.NoError(err, "image saved")
@@ -95,8 +136,8 @@ func TestGGPNG_Save(t *testing.T) {
 	require.NoError(err, "building circuit 2 failed")
 	require.NotNil(c2, "built circuit 2 should not be nil")
 
-	filePath2 := "ggpng_test2.png"
-	//defer os.Remove(filePath2) // Clean up
+	filePath2, cleanup2 := tempTestFile(t, "ggpng_test2.png")
+	defer cleanup2()
 
 	err = renderer.Save(filePath2, c2) // Save second circuit
 	assert.NoError(err, "image saved")

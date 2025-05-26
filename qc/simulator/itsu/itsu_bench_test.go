@@ -6,16 +6,34 @@ import (
 	"github.com/kegliz/qplay/qc/builder"
 	"github.com/kegliz/qplay/qc/renderer"
 	"github.com/kegliz/qplay/qc/simulator"
-	//"github.com/kegliz/qplay/qc/simulator/itsu"
+	"github.com/kegliz/qplay/qc/testutil"
 )
 
+// getBenchmarkConfig returns appropriate configuration based on test flags
+func getBenchmarkConfig(b *testing.B) testutil.TestConfig {
+	b.Helper()
+
+	if testing.Short() {
+		return testutil.QuickTestConfig
+	}
+	return testutil.BenchmarkTestConfig
+}
+
 // complexCircuit creates a moderately complex circuit for benchmarking.
-// It applies H to all qubits, then a chain of CNOTs, then measures all.
+// It applies H to all qubits, then Y/Z gates, then a chain of CNOTs, then measures all.
 func complexCircuit(numQubits int) builder.Builder {
 	b := builder.New(builder.Q(numQubits), builder.C(numQubits))
 	// Apply H to all qubits
 	for i := range numQubits {
 		b.H(i)
+	}
+	// Apply Y gates to odd qubits and Z gates to even qubits for variety
+	for i := range numQubits {
+		if i%2 == 0 {
+			b.Z(i)
+		} else {
+			b.Y(i)
+		}
 	}
 	// Apply a chain of CNOTs
 	for i := range numQubits - 1 {
@@ -28,29 +46,35 @@ func complexCircuit(numQubits int) builder.Builder {
 	return b
 }
 
-const shots = 1024 * 8 // Number of shots for the benchmark
-const numBenchmarkQubits = 7
-
 func BenchmarkSerial(b *testing.B) {
-	build := complexCircuit(numBenchmarkQubits)
+	config := getBenchmarkConfig(b)
+
+	build := complexCircuit(config.Qubits)
 	circ, err := build.BuildCircuit()
 	if err != nil {
 		b.Fatalf("build error: %v", err)
 	}
 
+	// Test file creation and cleanup using testutil
 	renderer := renderer.NewRenderer(80)
-	filePath1 := "benchmark.png"
-	//defer os.Remove(filePath1) // Clean up
+	filePath, cleanup := testutil.TempFileB(b, testutil.PNGTestSuffix)
+	defer cleanup()
 
-	err = renderer.Save(filePath1, circ) // Save first circuit
+	err = renderer.Save(filePath, circ)
 	if err != nil {
 		b.Fatalf("image save error: %v", err)
 	}
+
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
+
 	for i := 0; i < b.N; i++ {
-		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
-		sim.SetVerbose(true)
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{
+			Shots:  config.Shots,
+			Runner: NewItsuOneShotRunner(),
+		})
+		sim.SetVerbose(false) // Disable verbose for benchmarks
+
 		if _, err := sim.RunSerial(circ); err != nil {
 			b.Fatalf("run error: %v", err)
 		}
@@ -58,7 +82,9 @@ func BenchmarkSerial(b *testing.B) {
 }
 
 func BenchmarkParallel(b *testing.B) {
-	build := complexCircuit(numBenchmarkQubits)
+	config := getBenchmarkConfig(b)
+
+	build := complexCircuit(config.Qubits)
 	circ, err := build.BuildCircuit()
 	if err != nil {
 		b.Fatalf("build error: %v", err)
@@ -66,10 +92,14 @@ func BenchmarkParallel(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
+
 	for i := 0; i < b.N; i++ {
-		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
-		sim.SetVerbose(true)
-		// s.Workers is set by New, no need to set it again here
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{
+			Shots:  config.Shots,
+			Runner: NewItsuOneShotRunner(),
+		})
+		sim.SetVerbose(false) // Disable verbose for benchmarks
+
 		if _, err := sim.RunParallelChan(circ); err != nil {
 			b.Fatalf("run error: %v", err)
 		}
@@ -78,7 +108,9 @@ func BenchmarkParallel(b *testing.B) {
 
 // BenchmarkParallelStatic is a benchmark for the static partitioning of the parallel run.
 func BenchmarkParallelStatic(b *testing.B) {
-	build := complexCircuit(numBenchmarkQubits)
+	config := getBenchmarkConfig(b)
+
+	build := complexCircuit(config.Qubits)
 	circ, err := build.BuildCircuit()
 	if err != nil {
 		b.Fatalf("build error: %v", err)
@@ -86,10 +118,14 @@ func BenchmarkParallelStatic(b *testing.B) {
 
 	b.ReportAllocs()
 	b.ResetTimer() // Reset timer after setup
+
 	for i := 0; i < b.N; i++ {
-		sim := simulator.NewSimulator(simulator.SimulatorOptions{Shots: shots, Runner: NewItsuOneShotRunner()})
-		sim.SetVerbose(true)
-		// s.Workers is set by New, no need to set it again here
+		sim := simulator.NewSimulator(simulator.SimulatorOptions{
+			Shots:  config.Shots,
+			Runner: NewItsuOneShotRunner(),
+		})
+		sim.SetVerbose(false) // Disable verbose for benchmarks
+
 		if _, err := sim.RunParallelStatic(circ); err != nil {
 			b.Fatalf("run error: %v", err)
 		}

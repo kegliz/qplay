@@ -49,7 +49,9 @@ func (meas) Controls() []int    { return []int{} }  // No controls
 var (
 	hGate  = &u1{"H", "H"}
 	xGate  = &u1{"X", "X"}
+	yGate  = &u1{"Y", "Y"}
 	sGate  = &u1{"S", "S"}
+	zGate  = &u1{"Z", "Z"}
 	swapG  = &u2{"SWAP", "×", []int{0, 1}, []int{}}     // Targets 0, 1; No controls
 	cnotG  = &u2{"CNOT", "⊕", []int{1}, []int{0}}       // Target 1; Control 0
 	czGate = &u2{"CZ", "●", []int{1}, []int{0}}         // Target 1; Control 0 (Symbol represents control dot)
@@ -62,7 +64,9 @@ var (
 // (Reduces allocations and supports pointer equality tricks in passes.)
 func H() Gate       { return hGate }
 func X() Gate       { return xGate }
+func Y() Gate       { return yGate }
 func S() Gate       { return sGate }
+func Z() Gate       { return zGate }
 func Swap() Gate    { return swapG }
 func CNOT() Gate    { return cnotG }
 func CZ() Gate      { return czGate } // Added CZ accessor

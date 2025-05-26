@@ -206,3 +206,67 @@ func TestCircuit_FromBuildCircuit(t *testing.T) {
 	assert.Equal(3, c.Qubits(), "Qubit count mismatch")
 	assert.Equal(1, c.Clbits(), "Classical bit count mismatch")
 }
+
+func TestZGateIntegration(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	// Test Z gate through the builder interface
+	b := builder.New(builder.Q(2))
+	b.H(0).Z(0).CNOT(0, 1).Z(1)
+
+	// Build the DAG
+	dr, err := b.BuildDAG()
+	require.NoError(err, "building DAG with Z gate failed")
+	require.NotNil(dr, "built DAG should not be nil")
+
+	// Create the Circuit from the DAG
+	c := circuit.FromDAG(dr)
+	require.NotNil(c, "Circuit should not be nil")
+
+	assert.Equal(2, c.Qubits(), "Qubit count mismatch")
+	assert.Equal(0, c.Clbits(), "Classical bit count mismatch")
+
+	// Verify we can build a circuit directly with Z gates
+	circuitBuilder := builder.New(builder.Q(3))
+	circuitBuilder.H(0).Z(1).CNOT(0, 2).Z(2)
+
+	directCircuit, err := circuitBuilder.BuildCircuit()
+	require.NoError(err, "building circuit directly with Z gate failed")
+	require.NotNil(directCircuit, "built circuit should not be nil")
+
+	assert.Equal(3, directCircuit.Qubits(), "Direct circuit qubit count mismatch")
+	assert.Equal(0, directCircuit.Clbits(), "Direct circuit classical bit count mismatch")
+}
+
+func TestYGateIntegration(t *testing.T) {
+	assert := assert.New(t)
+	require := require.New(t)
+
+	// Test Y gate through the builder interface
+	b := builder.New(builder.Q(2))
+	b.H(0).Y(0).CNOT(0, 1).Y(1)
+
+	// Build the DAG
+	dr, err := b.BuildDAG()
+	require.NoError(err, "building DAG with Y gate failed")
+	require.NotNil(dr, "built DAG should not be nil")
+
+	// Create the Circuit from the DAG
+	c := circuit.FromDAG(dr)
+	require.NotNil(c, "Circuit should not be nil")
+
+	assert.Equal(2, c.Qubits(), "Qubit count mismatch")
+	assert.Equal(0, c.Clbits(), "Classical bit count mismatch")
+
+	// Verify we can build a circuit directly with Y gates
+	circuitBuilder := builder.New(builder.Q(3))
+	circuitBuilder.H(0).Y(1).CNOT(0, 2).Y(2)
+
+	directCircuit, err := circuitBuilder.BuildCircuit()
+	require.NoError(err, "building circuit directly with Y gate failed")
+	require.NotNil(directCircuit, "built circuit should not be nil")
+
+	assert.Equal(3, directCircuit.Qubits(), "Direct circuit qubit count mismatch")
+	assert.Equal(0, directCircuit.Clbits(), "Direct circuit classical bit count mismatch")
+}
