@@ -4,84 +4,128 @@ Quantum Benchmark Report
 Environment: local
 Branch: main
 Commit: unknown
-Build: 1748440344
-Timestamp: 2025-05-28T15:52:24+02:00
+Build: 1748442196
+Timestamp: 2025-05-28T16:23:16+02:00
 
 Results Summary:
 - Total Tests: 64
 - Passed: 64
 - Failed: 0
-- Total Duration: 30.419µs
-- Average Duration: 475ns
+- Total Duration: 14.879µs
+- Average Duration: 232ns
 
 Regression Analysis:
 - Status: fail
-- Regressions: 47
-- Improvements: 14
+- Regressions: 63
+- Improvements: 42
 
 
 Regressions Detected:
-- default_simple_serial: duration 433.60% (critical)
-- default_simple_parallel: duration 400.00% (critical)
-- default_simple_batch: duration 703.61% (critical)
-- default_simple_context: duration 14185.71% (critical)
-- default_entanglement_serial: duration 66.40% (critical)
-- default_entanglement_parallel: duration 954.22% (critical)
-- default_entanglement_batch: duration 12.61% (major)
-- default_entanglement_context: duration 451.81% (critical)
-- default_superposition_serial: memory 93.06% (major)
-- default_superposition_parallel: memory 137.70% (critical)
-- default_superposition_batch: duration 527.71% (critical)
-- default_superposition_context: duration 240.38% (critical)
-- default_mixed_serial: duration 400.00% (critical)
-- default_mixed_parallel: duration 700.00% (critical)
-- default_mixed_batch: duration 151.20% (critical)
-- default_mixed_context: duration 400.00% (critical)
-- itsu_simple_parallel: memory 20.33% (minor)
-- itsu_simple_batch: memory 123.42% (critical)
-- itsu_simple_context: memory 122.01% (critical)
-- itsu_entanglement_serial: duration 74.85% (critical)
-- itsu_entanglement_parallel: duration 133.60% (critical)
-- itsu_entanglement_batch: duration 50.00% (critical)
-- itsu_entanglement_context: duration 300.00% (critical)
-- itsu_superposition_serial: duration 174.85% (critical)
-- itsu_superposition_parallel: duration 19.62% (critical)
-- itsu_superposition_batch: memory 125.54% (critical)
-- itsu_superposition_context: duration 28.42% (critical)
-- itsu_mixed_serial: memory 129.10% (critical)
-- itsu_mixed_parallel: duration 132.80% (critical)
-- itsu_mixed_batch: memory 232.65% (critical)
-- itsu_mixed_context: duration 12.61% (critical)
-- itsubaki_simple_serial: memory 122.44% (critical)
-- itsubaki_simple_parallel: memory 125.20% (critical)
-- itsubaki_simple_batch: duration 24.55% (critical)
-- itsubaki_simple_context: duration 85.62% (critical)
-- itsubaki_entanglement_serial: memory 130.25% (critical)
-- itsubaki_entanglement_parallel: duration 300.00% (critical)
-- itsubaki_entanglement_batch: memory 125.46% (critical)
-- itsubaki_entanglement_context: duration 276.51% (critical)
-- itsubaki_superposition_serial: duration 33.60% (critical)
-- itsubaki_superposition_parallel: memory 126.76% (critical)
-- itsubaki_superposition_batch: duration 100.00% (critical)
-- itsubaki_superposition_context: duration 333.60% (critical)
-- itsubaki_mixed_serial: memory 132.61% (critical)
-- itsubaki_mixed_parallel: memory 127.63% (critical)
-- itsubaki_mixed_batch: duration 66.40% (critical)
-- itsubaki_mixed_context: duration 250.60% (critical)
+- itsu_simple_serial: duration 267.20% (critical)
+- itsu_simple_parallel: duration 151.20% (critical)
+- itsu_simple_batch: duration 1438.10% (critical)
+- itsu_simple_context: duration 723.35% (critical)
+- itsu_entanglement_serial: memory 36.86% (minor)
+- itsu_entanglement_parallel: duration 40.38% (major)
+- itsu_entanglement_batch: duration 74.85% (critical)
+- itsu_entanglement_context: duration 49.70% (major)
+- itsu_superposition_serial: duration 66.40% (critical)
+- itsu_superposition_parallel: duration 100.00% (critical)
+- itsu_superposition_batch: duration 33.60% (major)
+- itsu_superposition_context: memory 35.78% (minor)
+- itsu_mixed_serial: duration 197.62% (critical)
+- itsu_mixed_parallel: duration 97.62% (critical)
+- itsu_mixed_batch: duration 40.38% (major)
+- itsu_mixed_context: duration 197.62% (critical)
+- itsubaki_simple_serial: memory 173.41% (critical)
+- itsubaki_simple_parallel:  0.00% (minor)
+- itsubaki_simple_batch: memory 52.01% (major)
+- itsubaki_simple_context: memory 43.14% (minor)
+- itsubaki_entanglement_serial: memory 36.22% (minor)
+- itsubaki_entanglement_parallel: memory 33.06% (minor)
+- itsubaki_entanglement_batch: memory 35.72% (minor)
+- itsubaki_entanglement_context: memory 35.51% (minor)
+- itsubaki_superposition_serial: memory 35.95% (minor)
+- itsubaki_superposition_parallel: memory 30.19% (minor)
+- itsubaki_superposition_batch: memory 35.76% (minor)
+- itsubaki_superposition_context: memory 35.31% (minor)
+- itsubaki_mixed_serial: memory 53.46% (major)
+- itsubaki_mixed_parallel: memory 33.13% (minor)
+- itsubaki_mixed_batch: memory 36.05% (minor)
+- itsubaki_mixed_context: memory 35.83% (minor)
+- default_simple_serial: memory 35.12% (minor)
+- default_simple_parallel: memory 35.90% (minor)
+- default_simple_batch: memory 35.74% (minor)
+- default_simple_context: memory 25.00% (minor)
+- default_entanglement_serial: memory 35.97% (minor)
+- default_entanglement_parallel: memory 35.74% (minor)
+- default_entanglement_batch: memory 53.64% (major)
+- default_entanglement_context: duration 199.40% (critical)
+- default_superposition_serial: memory 35.47% (minor)
+- default_superposition_parallel: memory 36.02% (minor)
+- default_superposition_batch: memory 35.77% (minor)
+- default_superposition_context: memory 35.75% (minor)
+- default_mixed_serial: memory 36.12% (minor)
+- default_mixed_parallel: memory 35.38% (minor)
+- default_mixed_batch: memory 36.33% (minor)
+- default_mixed_context: memory 35.62% (minor)
+- qsim_simple_serial: memory 34.65% (minor)
+- qsim_simple_parallel: memory 25.24% (minor)
+- qsim_simple_batch: memory 25.82% (minor)
+- qsim_simple_context: duration 16.67% (minor)
+- qsim_entanglement_serial: memory 25.90% (minor)
+- qsim_entanglement_parallel: memory 25.42% (minor)
+- qsim_entanglement_context: memory 25.47% (minor)
+- qsim_superposition_serial: memory 24.80% (minor)
+- qsim_superposition_parallel: memory 25.70% (minor)
+- qsim_superposition_batch: memory 25.43% (minor)
+- qsim_superposition_context: memory 25.74% (minor)
+- qsim_mixed_serial: memory 25.87% (minor)
+- qsim_mixed_parallel: memory 25.51% (minor)
+- qsim_mixed_batch: duration 66.40% (critical)
+- qsim_mixed_context: memory 25.43% (minor)
 
 Improvements:
-- default_superposition_serial: duration -39.90%
-- default_superposition_parallel: duration -49.70%
-- itsu_simple_serial: duration -64.74%
-- itsu_simple_parallel: duration -66.60%
-- itsu_simple_batch: duration -63.65%
-- itsu_simple_context: duration -80.57%
-- itsu_mixed_serial: duration -66.80%
-- itsu_mixed_batch: duration -33.20%
-- itsubaki_simple_serial: duration -16.80%
-- itsubaki_simple_parallel: duration -28.42%
-- itsubaki_entanglement_batch: duration -35.79%
+- itsu_simple_serial: memory -25.17%
+- itsu_entanglement_serial: duration -33.60%
+- itsu_superposition_context: duration -37.54%
+- itsubaki_simple_serial: duration -45.53%
+- itsubaki_simple_parallel: duration -63.54%
+- itsubaki_simple_batch: duration -79.94%
+- itsubaki_simple_context: duration -70.80%
+- itsubaki_entanglement_serial: duration -28.42%
+- itsubaki_entanglement_parallel: duration -50.00%
+- itsubaki_entanglement_batch: duration -33.40%
+- itsubaki_entanglement_context: duration -19.71%
+- itsubaki_superposition_serial: duration -42.81%
 - itsubaki_superposition_parallel: duration -42.81%
-- itsubaki_mixed_serial: duration -25.15%
-- itsubaki_mixed_parallel: duration -59.81%
+- itsubaki_superposition_batch: duration -42.61%
+- itsubaki_superposition_context: duration -80.10%
+- itsubaki_mixed_parallel: duration -16.80%
+- itsubaki_mixed_batch: duration -28.52%
+- itsubaki_mixed_context: duration -16.80%
+- default_simple_serial: duration -50.00%
+- default_simple_batch: duration -33.20%
+- default_simple_context: duration -32.80%
+- default_entanglement_serial: duration -24.70%
+- default_entanglement_parallel: duration -19.71%
+- default_entanglement_batch: duration -49.40%
+- default_superposition_serial: duration -49.70%
+- default_superposition_parallel: duration -33.60%
+- default_superposition_batch: duration -50.00%
+- default_superposition_context: duration -62.46%
+- default_mixed_serial: duration -25.15%
+- default_mixed_parallel: duration -39.90%
+- default_mixed_batch: duration -39.90%
+- default_mixed_context: duration -50.30%
+- qsim_simple_serial: duration -39.90%
+- qsim_simple_parallel: duration -32.80%
+- qsim_simple_batch: duration -84.81%
+- qsim_entanglement_serial: duration -50.30%
+- qsim_entanglement_parallel: duration -32.80%
+- qsim_entanglement_batch: duration -40.19%
+- qsim_superposition_serial: duration -33.60%
+- qsim_superposition_batch: duration -49.70%
+- qsim_mixed_parallel: duration -25.15%
+- qsim_mixed_context: duration -33.60%
 

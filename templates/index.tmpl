@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .title }}</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link rel="stylesheet" href="/static/css/circuit-builder.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fas fa-atom"></i>
+                        <h1>Quantum Playground</h1>
+                        <span class="version">v{{ .version | default "0.0.2" }}</span>
+                    </div>
+                    <nav class="nav">
+                        <button class="nav-btn active" data-tab="builder">
+                            <i class="fas fa-wrench"></i> Circuit Builder
+                        </button>
+                        <button class="nav-btn" data-tab="examples">
+                            <i class="fas fa-lightbulb"></i> Examples
+                        </button>
+                        <button class="nav-btn" data-tab="learn">
+                            <i class="fas fa-graduation-cap"></i> Learn
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <!-- Circuit Builder Tab -->
+                <div id="builder-tab" class="tab-content active">
+                    <div class="builder-layout">
+                        <!-- Gate Palette -->
+                        <div class="gate-palette">
+                            <h3><i class="fas fa-tools"></i> Quantum Gates</h3>
+                            
+                            <div class="gate-category">
+                                <h4>Single-Qubit Gates</h4>
+                                <div class="gate-list">
+                                    <div class="gate-item" data-gate="H" data-type="single" title="Hadamard Gate - Creates superposition">
+                                        <div class="gate-visual">H</div>
+                                        <div class="gate-name">Hadamard</div>
+                                    </div>
+                                    <div class="gate-item" data-gate="X" data-type="single" title="Pauli-X Gate - Bit flip">
+                                        <div class="gate-visual">X</div>
+                                        <div class="gate-name">Pauli-X</div>
+                                    </div>
+                                    <div class="gate-item" data-gate="Y" data-type="single" title="Pauli-Y Gate - Bit and phase flip">
+                                        <div class="gate-visual">Y</div>
+                                        <div class="gate-name">Pauli-Y</div>
+                                    </div>
+                                    <div class="gate-item" data-gate="Z" data-type="single" title="Pauli-Z Gate - Phase flip">
+                                        <div class="gate-visual">Z</div>
+                                        <div class="gate-name">Pauli-Z</div>
+                                    </div>
+                                    <div class="gate-item" data-gate="S" data-type="single" title="S Gate - Phase shift">
+                                        <div class="gate-visual">S</div>
+                                        <div class="gate-name">S Gate</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gate-category">
+                                <h4>Two-Qubit Gates</h4>
+                                <div class="gate-list">
+                                    <div class="gate-item" data-gate="CNOT" data-type="two" title="Controlled-NOT Gate - Creates entanglement">
+                                        <div class="gate-visual">⊕</div>
+                                        <div class="gate-name">CNOT</div>
+                                    </div>
+                                    <div class="gate-item" data-gate="CZ" data-type="two" title="Controlled-Z Gate">
+                                        <div class="gate-visual">CZ</div>
+                                        <div class="gate-name">Controlled-Z</div>
+                                    </div>
+                                    <div class="gate-item" data-gate="SWAP" data-type="two" title="SWAP Gate - Swaps qubit states">
+                                        <div class="gate-visual">⨯</div>
+                                        <div class="gate-name">SWAP</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="gate-category">
+                                <h4>Measurement</h4>
+                                <div class="gate-list">
+                                    <div class="gate-item" data-gate="MEASURE" data-type="measure" title="Measurement - Collapses superposition">
+                                        <div class="gate-visual">📊</div>
+                                        <div class="gate-name">Measure</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Circuit Canvas -->
+                        <div class="circuit-canvas">
+                            <div class="canvas-header">
+                                <h3><i class="fas fa-sitemap"></i> Circuit Design</h3>
+                                <div class="canvas-controls">
+                                    <label for="qubit-count">Qubits:</label>
+                                    <select id="qubit-count">
+                                        <option value="1">1</option>
+                                        <option value="2" selected>2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                    </select>
+                                    <button id="clear-circuit" class="btn-secondary">
+                                        <i class="fas fa-trash"></i> Clear
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="circuit-grid" id="circuit-grid">
+                                <!-- Circuit grid will be generated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Execution Panel -->
+                        <div class="execution-panel">
+                            <h3><i class="fas fa-play"></i> Execute Circuit</h3>
+                            
+                            <div class="execution-controls">
+                                <div class="control-group">
+                                    <label for="backend-select">Backend:</label>
+                                    <select id="backend-select">
+                                        <option value="qsim">QSim (High Performance)</option>
+                                        <option value="itsu">Itsubaki (Reference)</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="control-group">
+                                    <label for="shots-input">Shots:</label>
+                                    <input type="number" id="shots-input" value="1024" min="1" max="10000">
+                                </div>
+                                
+                                <button id="run-circuit" class="btn-primary">
+                                    <i class="fas fa-play"></i> Run Circuit
+                                </button>
+                            </div>
+
+                            <div class="results-section" id="results-section" style="display: none;">
+                                <h4>Results</h4>
+                                <div class="execution-stats">
+                                    <div class="stat">
+                                        <span class="stat-label">Execution Time:</span>
+                                        <span class="stat-value" id="execution-time">-</span>
+                                    </div>
+                                    <div class="stat">
+                                        <span class="stat-label">Backend:</span>
+                                        <span class="stat-value" id="used-backend">-</span>
+                                    </div>
+                                </div>
+                                <div class="probability-chart" id="probability-chart">
+                                    <!-- Probability results will be displayed here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Circuit Visualization -->
+                    <div class="circuit-visualization">
+                        <h3><i class="fas fa-image"></i> Circuit Diagram</h3>
+                        <div class="visualization-container">
+                            <div class="circuit-diagram" id="circuit-diagram">
+                                <div class="empty-state">
+                                    <i class="fas fa-plus-circle"></i>
+                                    <p>Add gates to see your circuit diagram</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Examples Tab -->
+                <div id="examples-tab" class="tab-content">
+                    <div class="examples-grid">
+                        <div class="example-card" data-example="bell-state">
+                            <h3><i class="fas fa-heart"></i> Bell State</h3>
+                            <p>Create an entangled pair of qubits using Hadamard and CNOT gates.</p>
+                            <div class="example-gates">H → CNOT → Measure</div>
+                            <button class="btn-primary load-example">Load Example</button>
+                        </div>
+                        
+                        <div class="example-card" data-example="superposition">
+                            <h3><i class="fas fa-wave-square"></i> Superposition</h3>
+                            <p>Put a qubit in superposition using the Hadamard gate.</p>
+                            <div class="example-gates">H → Measure</div>
+                            <button class="btn-primary load-example">Load Example</button>
+                        </div>
+                        
+                        <div class="example-card" data-example="phase-flip">
+                            <h3><i class="fas fa-sync"></i> Phase Flip</h3>
+                            <p>Demonstrate phase changes using Z and S gates.</p>
+                            <div class="example-gates">H → Z → H → Measure</div>
+                            <button class="btn-primary load-example">Load Example</button>
+                        </div>
+                        
+                        <div class="example-card" data-example="swap">
+                            <h3><i class="fas fa-exchange-alt"></i> SWAP Operation</h3>
+                            <p>Exchange the states of two qubits using the SWAP gate.</p>
+                            <div class="example-gates">X → SWAP → Measure</div>
+                            <button class="btn-primary load-example">Load Example</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Learn Tab -->
+                <div id="learn-tab" class="tab-content">
+                    <div class="learn-content">
+                        <div class="learn-section">
+                            <h2><i class="fas fa-book"></i> Quantum Computing Basics</h2>
+                            
+                            <div class="concept-card">
+                                <h3>What is a Qubit?</h3>
+                                <p>A qubit (quantum bit) is the basic unit of quantum information. Unlike classical bits that can only be 0 or 1, qubits can exist in a <strong>superposition</strong> of both states simultaneously.</p>
+                            </div>
+                            
+                            <div class="concept-card">
+                                <h3>Quantum Gates</h3>
+                                <p>Quantum gates are operations that manipulate qubits. They are the building blocks of quantum circuits:</p>
+                                <ul>
+                                    <li><strong>Hadamard (H):</strong> Creates superposition - puts a qubit into equal probability of |0⟩ and |1⟩</li>
+                                    <li><strong>Pauli-X:</strong> Bit flip - equivalent to NOT gate in classical computing</li>
+                                    <li><strong>Pauli-Z:</strong> Phase flip - changes the phase of |1⟩ state</li>
+                                    <li><strong>CNOT:</strong> Controlled NOT - flips target qubit if control qubit is |1⟩</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="concept-card">
+                                <h3>Entanglement</h3>
+                                <p>Quantum entanglement occurs when qubits become correlated in such a way that the measurement of one instantly affects the other, regardless of distance. The Bell state is a classic example of entanglement.</p>
+                            </div>
+                            
+                            <div class="concept-card">
+                                <h3>Measurement</h3>
+                                <p>When you measure a qubit, it collapses from superposition to a definite state (|0⟩ or |1⟩). The probabilities of each outcome depend on the quantum state created by your circuit.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Loading Overlay -->
+        <div id="loading-overlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner">
+                <i class="fas fa-atom fa-spin"></i>
+                <p>Executing quantum circuit...</p>
+            </div>
+        </div>
+
+        <!-- Notification Toast -->
+        <div id="notification" class="notification" style="display: none;">
+            <div class="notification-content">
+                <i class="notification-icon"></i>
+                <span class="notification-message"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="/static/js/circuit-builder.js"></script>
+    <script src="/static/js/examples.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>

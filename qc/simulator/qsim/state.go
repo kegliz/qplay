@@ -87,14 +87,17 @@ func (qs *QuantumState) Clone() *QuantumState {
 // Normalize ensures the state vector has unit magnitude
 func (qs *QuantumState) Normalize() {
 	var norm float64
-	for _, amp := range qs.amplitudes {
-		norm += real(amp * cmplx.Conj(amp))
+	// Optimized norm calculation
+	for i := 0; i < len(qs.amplitudes); i++ {
+		amp := qs.amplitudes[i]
+		norm += real(amp)*real(amp) + imag(amp)*imag(amp)
 	}
-	norm = math.Sqrt(norm)
 
 	if norm > 1e-10 { // Avoid division by zero
-		for i := range qs.amplitudes {
-			qs.amplitudes[i] /= complex(norm, 0)
+		norm = math.Sqrt(norm)
+		invNorm := complex(1.0/norm, 0)
+		for i := 0; i < len(qs.amplitudes); i++ {
+			qs.amplitudes[i] *= invNorm
 		}
 	}
 }
@@ -102,8 +105,10 @@ func (qs *QuantumState) Normalize() {
 // GetProbabilities returns measurement probabilities for each computational basis state
 func (qs *QuantumState) GetProbabilities() []float64 {
 	probs := make([]float64, len(qs.amplitudes))
-	for i, amp := range qs.amplitudes {
-		probs[i] = real(amp * cmplx.Conj(amp))
+	// Optimized probability calculation using manual loop unrolling
+	for i := 0; i < len(qs.amplitudes); i++ {
+		amp := qs.amplitudes[i]
+		probs[i] = real(amp)*real(amp) + imag(amp)*imag(amp)
 	}
 	return probs
 }
@@ -118,8 +123,14 @@ func (qs *QuantumState) Measure(qubit int) bool {
 	var probOne float64
 	mask := 1 << qubit
 
-	for i, amp := range qs.amplitudes {
-		if (i & mask) != 0 { // Bit is set (|1⟩)
+	// Optimized probability calculation
+	for i := mask; i < len(qs.amplitudes); i += 2 << qubit {
+		end := i + (1 << qubit)
+		if end > len(qs.amplitudes) {
+			end = len(qs.amplitudes)
+		}
+		for j := i; j < end; j++ {
+			amp := qs.amplitudes[j]
 			probOne += real(amp * cmplx.Conj(amp))
 		}
 	}
@@ -127,23 +138,37 @@ func (qs *QuantumState) Measure(qubit int) bool {
 	// Perform measurement
 	result := rand.Float64() < probOne
 
-	// Collapse the state
+	// Collapse the state - optimized normalization
 	var norm float64
-	for i := range qs.amplitudes {
-		bitSet := (i & mask) != 0
-		if bitSet != result {
-			qs.amplitudes[i] = 0 // Zero out incompatible amplitudes
-		} else {
-			norm += real(qs.amplitudes[i] * cmplx.Conj(qs.amplitudes[i]))
+	if result {
+		// Keep |1⟩ states, zero |0⟩ states
+		for i := 0; i < len(qs.amplitudes); i++ {
+			if (i & mask) != 0 {
+				amp := qs.amplitudes[i]
+				norm += real(amp * cmplx.Conj(amp))
+			} else {
+				qs.amplitudes[i] = 0
+			}
+		}
+	} else {
+		// Keep |0⟩ states, zero |1⟩ states
+		for i := 0; i < len(qs.amplitudes); i++ {
+			if (i & mask) == 0 {
+				amp := qs.amplitudes[i]
+				norm += real(amp * cmplx.Conj(amp))
+			} else {
+				qs.amplitudes[i] = 0
+			}
 		}
 	}
 
 	// Renormalize
 	if norm > 1e-10 {
 		norm = math.Sqrt(norm)
-		for i := range qs.amplitudes {
+		invNorm := complex(1.0/norm, 0)
+		for i := 0; i < len(qs.amplitudes); i++ {
 			if (i&mask != 0) == result {
-				qs.amplitudes[i] /= complex(norm, 0)
+				qs.amplitudes[i] *= invNorm
 			}
 		}
 	}
@@ -189,17 +214,17 @@ func (qs *QuantumState) applyHadamard(qubit int) error {
 	mask := 1 << qubit
 	invSqrt2 := complex(1.0/math.Sqrt(2), 0)
 
-	newAmplitudes := make([]complex128, len(qs.amplitudes))
-
-	for i := range qs.amplitudes {
+	// Process only half the states (avoid double processing)
+	// Work in-place to avoid memory allocation
+	for i := 0; i < len(qs.amplitudes); i++ {
 		if (i & mask) == 0 { // |0⟩ component
 			j := i | mask // Corresponding |1⟩ state
-			newAmplitudes[i] = invSqrt2 * (qs.amplitudes[i] + qs.amplitudes[j])
-			newAmplitudes[j] = invSqrt2 * (qs.amplitudes[i] - qs.amplitudes[j])
+			a0, a1 := qs.amplitudes[i], qs.amplitudes[j]
+			qs.amplitudes[i] = invSqrt2 * (a0 + a1)
+			qs.amplitudes[j] = invSqrt2 * (a0 - a1)
 		}
 	}
 
-	qs.amplitudes = newAmplitudes
 	return nil
 }
 
@@ -210,8 +235,9 @@ func (qs *QuantumState) applyPauliX(qubit int) error {
 
 	mask := 1 << qubit
 
-	for i := range qs.amplitudes {
-		if (i & mask) == 0 { // |0⟩ component
+	// Optimized X gate: only process pairs once
+	for i := 0; i < len(qs.amplitudes); i++ {
+		if (i & mask) == 0 { // Only process |0⟩ states
 			j := i | mask // Corresponding |1⟩ state
 			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
 		}
@@ -228,8 +254,9 @@ func (qs *QuantumState) applyPauliY(qubit int) error {
 	mask := 1 << qubit
 	i := complex(0, 1) // Imaginary unit
 
-	for idx := range qs.amplitudes {
-		if (idx & mask) == 0 { // |0⟩ component
+	// Optimized Y gate: only process pairs once
+	for idx := 0; idx < len(qs.amplitudes); idx++ {
+		if (idx & mask) == 0 { // Only process |0⟩ states
 			j := idx | mask // Corresponding |1⟩ state
 			temp := qs.amplitudes[idx]
 			qs.amplitudes[idx] = -i * qs.amplitudes[j]
@@ -283,12 +310,11 @@ func (qs *QuantumState) applyCNOT(control, target int) error {
 	controlMask := 1 << control
 	targetMask := 1 << target
 
+	// Only process states where control is |1⟩ and target is |0⟩
 	for i := 0; i < len(qs.amplitudes); i++ {
-		if (i & controlMask) != 0 { // Control is |1⟩
-			if (i & targetMask) == 0 { // Target is |0⟩
-				j := i | targetMask // Flip target to |1⟩
-				qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
-			}
+		if (i&controlMask) != 0 && (i&targetMask) == 0 {
+			j := i | targetMask
+			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
 		}
 	}
 
@@ -320,21 +346,11 @@ func (qs *QuantumState) applySwap(qubit1, qubit2 int) error {
 	mask1 := 1 << qubit1
 	mask2 := 1 << qubit2
 
+	// Optimized SWAP: only process states where qubits have different values
 	for i := 0; i < len(qs.amplitudes); i++ {
-		bit1 := (i & mask1) != 0
-		bit2 := (i & mask2) != 0
-
-		if bit1 != bit2 { // Only swap if bits are different
-			j := i
-			if bit1 { // qubit1 is 1, qubit2 is 0
-				j = (i &^ mask1) | mask2 // Set qubit1 to 0, qubit2 to 1
-			} else { // qubit1 is 0, qubit2 is 1
-				j = (i &^ mask2) | mask1 // Set qubit1 to 1, qubit2 to 0
-			}
-
-			if i < j { // Avoid double swapping
-				qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
-			}
+		if (i&mask1) != 0 && (i&mask2) == 0 { // qubit1=1, qubit2=0
+			j := (i &^ mask1) | mask2 // qubit1=0, qubit2=1
+			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
 		}
 	}
 
@@ -351,13 +367,13 @@ func (qs *QuantumState) applyToffoli(control1, control2, target int) error {
 	mask1 := 1 << control1
 	mask2 := 1 << control2
 	targetMask := 1 << target
+	controlMask := mask1 | mask2
 
+	// Only process states where both controls are |1⟩ and target is |0⟩
 	for i := 0; i < len(qs.amplitudes); i++ {
-		if (i&mask1) != 0 && (i&mask2) != 0 { // Both controls are |1⟩
-			if (i & targetMask) == 0 { // Target is |0⟩
-				j := i | targetMask // Flip target to |1⟩
-				qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
-			}
+		if (i&controlMask) == controlMask && (i&targetMask) == 0 {
+			j := i | targetMask
+			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
 		}
 	}
 

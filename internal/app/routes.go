@@ -21,6 +21,12 @@ func (a *appServer) routes() []*router.Route {
 			HandlerFunc: a.HealthHandler,
 		},
 		{
+			Name:        "api.execute",
+			Method:      http.MethodPost,
+			Pattern:     "/api/execute",
+			HandlerFunc: a.ExecuteCircuit,
+		},
+		{
 			Name:        "api.qprogs.save",
 			Method:      http.MethodPost,
 			Pattern:     "/api/qprogs",
