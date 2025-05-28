@@ -76,6 +76,15 @@ var (
 		Timeout:   BenchmarkTimeout,
 		Tolerance: StrictTolerance,
 	}
+
+	// ConservativeTestConfig provides very conservative settings for resource-constrained environments
+	ConservativeTestConfig = TestConfig{
+		Shots:     50,              // Very small shot count
+		Qubits:    2,               // Minimal qubits
+		Workers:   2,               // Few workers
+		Timeout:   5 * time.Second, // Short timeout
+		Tolerance: DefaultTolerance,
+	}
 )
 
 // WithTimeout creates a context with timeout for test operations
