@@ -1,0 +1,65 @@
+{
+  "results": [
+    {
+      "timestamp": "2025-05-28T15:52:24.296344+02:00",
+      "git_hash": "unknown",
+      "version": "1748440344",
+      "result": {
+        "runner_name": "qsim",
+        "circuit_type": "entanglement",
+        "scenario": "serial",
+        "success": true,
+        "duration": 208,
+        "allocs_per_op": 0,
+        "bytes_per_op": 0,
+        "backend_info": {
+          "name": "QSim Quantum Simulator",
+          "version": "v1.0.0",
+          "description": "Custom statevector-based quantum circuit simulator built from scratch",
+          "vendor": "qplay",
+          "capabilities": {
+            "batch_execution": true,
+            "circuit_validation": true,
+            "configuration": true,
+            "context_support": true,
+            "metrics_collection": true,
+            "reset": true
+          },
+          "metadata": {
+            "backend_type": "statevector_simulator",
+            "implementation": "from_scratch",
+            "language": "go",
+            "license": "MIT"
+          }
+        },
+        "metrics": {
+          "total_executions": 0,
+          "successful_runs": 0,
+          "failed_runs": 0,
+          "average_time": 0,
+          "total_time": 0,
+          "last_run_time": "0001-01-01T00:00:00Z"
+        },
+        "resource_usage": {
+          "start_memory": 261216,
+          "peak_memory": 0,
+          "end_memory": 245064,
+          "memory_delta": -16152,
+          "gc_count": 2,
+          "duration": 0,
+          "circuit_depth": 3,
+          "circuit_qubits": 2
+        }
+      }
+    }
+  ],
+  "metadata": {
+    "runner_name": "qsim",
+    "circuit_type": "entanglement",
+    "scenario": "serial",
+    "created_at": "2025-05-28T15:52:24.296344+02:00",
+    "total_runs": 1,
+    "retention_days": 30
+  },
+  "last_update": "2025-05-28T15:52:24.296345+02:00"
+}

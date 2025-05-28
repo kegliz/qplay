@@ -50,6 +50,57 @@
           "circuit_qubits": 2
         }
       }
+    },
+    {
+      "timestamp": "2025-05-28T15:52:24.284619+02:00",
+      "git_hash": "unknown",
+      "version": "1748440344",
+      "result": {
+        "runner_name": "default",
+        "circuit_type": "entanglement",
+        "scenario": "context",
+        "success": true,
+        "duration": 458,
+        "allocs_per_op": 0,
+        "bytes_per_op": 0,
+        "backend_info": {
+          "name": "Itsu Quantum Simulator",
+          "version": "v0.0.5",
+          "description": "Go-based quantum circuit simulator using github.com/itsubaki/q",
+          "vendor": "itsubaki",
+          "capabilities": {
+            "batch_execution": true,
+            "circuit_validation": true,
+            "configuration": true,
+            "context_support": true,
+            "metrics_collection": true,
+            "reset": true
+          },
+          "metadata": {
+            "backend_type": "statevector_simulator",
+            "language": "go",
+            "license": "MIT"
+          }
+        },
+        "metrics": {
+          "total_executions": 0,
+          "successful_runs": 0,
+          "failed_runs": 0,
+          "average_time": 0,
+          "total_time": 0,
+          "last_run_time": "0001-01-01T00:00:00Z"
+        },
+        "resource_usage": {
+          "start_memory": 262576,
+          "peak_memory": 0,
+          "end_memory": 224848,
+          "memory_delta": -37728,
+          "gc_count": 2,
+          "duration": 0,
+          "circuit_depth": 3,
+          "circuit_qubits": 2
+        }
+      }
     }
   ],
   "metadata": {
@@ -57,8 +108,8 @@
     "circuit_type": "entanglement",
     "scenario": "context",
     "created_at": "2025-05-28T13:34:47.378462+02:00",
-    "total_runs": 1,
+    "total_runs": 2,
     "retention_days": 30
   },
-  "last_update": "2025-05-28T13:34:47.378462+02:00"
+  "last_update": "2025-05-28T15:52:24.28462+02:00"
 }

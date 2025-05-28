@@ -13,6 +13,7 @@ import (
 	"github.com/kegliz/qplay/qc/benchmark"
 	"github.com/kegliz/qplay/qc/simulator"
 	_ "github.com/kegliz/qplay/qc/simulator/itsu" // Import to register the runner
+	_ "github.com/kegliz/qplay/qc/simulator/qsim" // Import to register the QSim runner
 	"github.com/kegliz/qplay/qc/testutil"
 )
 
