@@ -106,7 +106,7 @@ func (qs *QuantumState) Normalize() {
 func (qs *QuantumState) GetProbabilities() []float64 {
 	probs := make([]float64, len(qs.amplitudes))
 	// Optimized probability calculation using manual loop unrolling
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		amp := qs.amplitudes[i]
 		probs[i] = real(amp)*real(amp) + imag(amp)*imag(amp)
 	}
@@ -125,10 +125,7 @@ func (qs *QuantumState) Measure(qubit int) bool {
 
 	// Optimized probability calculation
 	for i := mask; i < len(qs.amplitudes); i += 2 << qubit {
-		end := i + (1 << qubit)
-		if end > len(qs.amplitudes) {
-			end = len(qs.amplitudes)
-		}
+		end := min(i+(1<<qubit), len(qs.amplitudes))
 		for j := i; j < end; j++ {
 			amp := qs.amplitudes[j]
 			probOne += real(amp * cmplx.Conj(amp))
@@ -142,7 +139,7 @@ func (qs *QuantumState) Measure(qubit int) bool {
 	var norm float64
 	if result {
 		// Keep |1⟩ states, zero |0⟩ states
-		for i := 0; i < len(qs.amplitudes); i++ {
+		for i := range qs.amplitudes {
 			if (i & mask) != 0 {
 				amp := qs.amplitudes[i]
 				norm += real(amp * cmplx.Conj(amp))
@@ -152,7 +149,7 @@ func (qs *QuantumState) Measure(qubit int) bool {
 		}
 	} else {
 		// Keep |0⟩ states, zero |1⟩ states
-		for i := 0; i < len(qs.amplitudes); i++ {
+		for i := range qs.amplitudes {
 			if (i & mask) == 0 {
 				amp := qs.amplitudes[i]
 				norm += real(amp * cmplx.Conj(amp))
@@ -166,7 +163,7 @@ func (qs *QuantumState) Measure(qubit int) bool {
 	if norm > 1e-10 {
 		norm = math.Sqrt(norm)
 		invNorm := complex(1.0/norm, 0)
-		for i := 0; i < len(qs.amplitudes); i++ {
+		for i := range qs.amplitudes {
 			if (i&mask != 0) == result {
 				qs.amplitudes[i] *= invNorm
 			}
@@ -236,7 +233,7 @@ func (qs *QuantumState) applyPauliX(qubit int) error {
 	mask := 1 << qubit
 
 	// Optimized X gate: only process pairs once
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		if (i & mask) == 0 { // Only process |0⟩ states
 			j := i | mask // Corresponding |1⟩ state
 			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
@@ -255,7 +252,7 @@ func (qs *QuantumState) applyPauliY(qubit int) error {
 	i := complex(0, 1) // Imaginary unit
 
 	// Optimized Y gate: only process pairs once
-	for idx := 0; idx < len(qs.amplitudes); idx++ {
+	for idx := range qs.amplitudes {
 		if (idx & mask) == 0 { // Only process |0⟩ states
 			j := idx | mask // Corresponding |1⟩ state
 			temp := qs.amplitudes[idx]
@@ -291,7 +288,7 @@ func (qs *QuantumState) applyS(qubit int) error {
 	mask := 1 << qubit
 	i := complex(0, 1) // Imaginary unit
 
-	for idx := 0; idx < len(qs.amplitudes); idx++ {
+	for idx := range qs.amplitudes {
 		if (idx & mask) != 0 { // |1⟩ component gets i phase
 			qs.amplitudes[idx] = i * qs.amplitudes[idx]
 		}
@@ -329,7 +326,7 @@ func (qs *QuantumState) applyCZ(control, target int) error {
 	controlMask := 1 << control
 	targetMask := 1 << target
 
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		if (i&controlMask) != 0 && (i&targetMask) != 0 { // Both |1⟩
 			qs.amplitudes[i] = -qs.amplitudes[i]
 		}
@@ -347,7 +344,7 @@ func (qs *QuantumState) applySwap(qubit1, qubit2 int) error {
 	mask2 := 1 << qubit2
 
 	// Optimized SWAP: only process states where qubits have different values
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		if (i&mask1) != 0 && (i&mask2) == 0 { // qubit1=1, qubit2=0
 			j := (i &^ mask1) | mask2 // qubit1=0, qubit2=1
 			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
@@ -370,7 +367,7 @@ func (qs *QuantumState) applyToffoli(control1, control2, target int) error {
 	controlMask := mask1 | mask2
 
 	// Only process states where both controls are |1⟩ and target is |0⟩
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		if (i&controlMask) == controlMask && (i&targetMask) == 0 {
 			j := i | targetMask
 			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
@@ -389,7 +386,7 @@ func (qs *QuantumState) applyFredkin(control, target1, target2 int) error {
 	mask1 := 1 << target1
 	mask2 := 1 << target2
 
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		if (i & controlMask) != 0 { // Control is |1⟩
 			bit1 := (i & mask1) != 0
 			bit2 := (i & mask2) != 0

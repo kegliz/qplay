@@ -7,6 +7,8 @@ import (
 	"strings"
 	"time"
 
+	"slices"
+
 	"github.com/kegliz/qplay/qc/circuit"
 	"github.com/kegliz/qplay/qc/simulator"
 )
@@ -254,13 +256,7 @@ func (r *QSimRunner) ValidateCircuit(c circuit.Circuit) error {
 
 	// Check all gates are supported
 	for _, op := range c.Operations() {
-		supported := false
-		for _, supportedGate := range supportedGates {
-			if op.G.Name() == supportedGate {
-				supported = true
-				break
-			}
-		}
+		supported := slices.Contains(supportedGates, op.G.Name())
 
 		if !supported {
 			return fmt.Errorf("unsupported gate: %s", op.G.Name())
@@ -296,7 +292,7 @@ func (r *QSimRunner) RunBatch(c circuit.Circuit, shots int) ([]string, error) {
 
 	results := make([]string, shots)
 
-	for i := 0; i < shots; i++ {
+	for i := range shots {
 		result, err := r.RunOnce(c)
 		if err != nil {
 			return nil, fmt.Errorf("shot %d failed: %w", i, err)

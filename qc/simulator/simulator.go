@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog"
 )
 
-// ItsuSimulatorOptions encapsulates the parameters for creating a Simulator.
+// SimulatorOptions encapsulates the parameters for creating a Simulator.
 type SimulatorOptions struct {
 	Shots   int
 	Workers int // number of concurrent workers (0 => NumCPU)

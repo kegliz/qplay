@@ -36,7 +36,7 @@ func createBellStateCircuit() circuit.Circuit {
 func createSuperpositionCircuit(qubits int) circuit.Circuit {
 	b := builder.New(builder.Q(qubits), builder.C(qubits))
 
-	for i := 0; i < qubits; i++ {
+	for i := range qubits {
 		b.H(i)
 	}
 
@@ -74,7 +74,7 @@ func TestQSimRunner_BellState(t *testing.T) {
 	results := make(map[string]int)
 	runs := 1000
 
-	for i := 0; i < runs; i++ {
+	for range runs {
 		result, err := runner.RunOnce(circ)
 		if err != nil {
 			t.Fatalf("Failed to run Bell state circuit: %v", err)
@@ -121,7 +121,7 @@ func TestQSimRunner_CompareWithItsubaki(t *testing.T) {
 			itsubakiResults := make(map[string]int)
 
 			// Run with QSim
-			for i := 0; i < runs; i++ {
+			for range runs {
 				result, err := qsimRunner.RunOnce(tc.circ)
 				if err != nil {
 					t.Fatalf("QSim failed: %v", err)
@@ -130,7 +130,7 @@ func TestQSimRunner_CompareWithItsubaki(t *testing.T) {
 			}
 
 			// Run with Itsubaki
-			for i := 0; i < runs; i++ {
+			for range runs {
 				result, err := itsubakiRunner.RunOnce(tc.circ)
 				if err != nil {
 					t.Fatalf("Itsubaki failed: %v", err)

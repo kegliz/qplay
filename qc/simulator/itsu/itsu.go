@@ -7,6 +7,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"maps"
+	"slices"
+
 	"github.com/itsubaki/q"
 	"github.com/kegliz/qplay/internal/logger"
 	"github.com/kegliz/qplay/qc/circuit"
@@ -40,7 +43,7 @@ func NewItsuOneShotRunner() *ItsuOneShotRunner {
 		log: *logger.NewLogger(logger.LoggerOptions{
 			Debug: false,
 		}),
-		config: make(map[string]interface{}),
+		config: make(map[string]any),
 	}
 }
 
@@ -100,10 +103,8 @@ func (s *ItsuOneShotRunner) GetConfiguration() map[string]interface{} {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	config := make(map[string]interface{})
-	for k, v := range s.config {
-		config[k] = v
-	}
+	config := make(map[string]any)
+	maps.Copy(config, s.config)
 	return config
 }
 func (s *ItsuOneShotRunner) SetVerbose(verbose bool) {
@@ -242,13 +243,7 @@ func (s *ItsuOneShotRunner) ResetMetrics() {
 func (s *ItsuOneShotRunner) ValidateCircuit(c circuit.Circuit) error {
 	for i, op := range c.Operations() {
 		// Check if gate is supported
-		supported := false
-		for _, gate := range supportedGates {
-			if op.G.Name() == gate {
-				supported = true
-				break
-			}
-		}
+		supported := slices.Contains(supportedGates, op.G.Name())
 		if !supported {
 			return fmt.Errorf("itsu: unsupported gate %s at operation %d", op.G.Name(), i)
 		}
@@ -328,7 +323,7 @@ func (s *ItsuOneShotRunner) RunBatch(c circuit.Circuit, shots int) ([]string, er
 	}
 
 	results := make([]string, shots)
-	for i := 0; i < shots; i++ {
+	for i := range shots {
 		result, err := s.RunOnce(c)
 		if err != nil {
 			return results[:i], fmt.Errorf("batch execution failed at shot %d: %w", i+1, err)
