@@ -4,6 +4,8 @@ import (
 	"context"
 	"testing"
 
+	"maps"
+
 	"github.com/kegliz/qplay/qc/builder"
 	"github.com/kegliz/qplay/qc/circuit"
 	"github.com/stretchr/testify/assert"
@@ -51,10 +53,8 @@ func (m *mockFullFeaturedRunner) RunOnceWithContext(ctx context.Context, c circu
 	}
 }
 
-func (m *mockFullFeaturedRunner) Configure(options map[string]interface{}) error {
-	for k, v := range options {
-		m.config[k] = v
-	}
+func (m *mockFullFeaturedRunner) Configure(options map[string]any) error {
+	maps.Copy(m.config, options)
 	return nil
 }
 
@@ -62,7 +62,7 @@ func (m *mockFullFeaturedRunner) SetVerbose(verbose bool) {
 	m.config["verbose"] = verbose
 }
 
-func (m *mockFullFeaturedRunner) GetConfiguration() map[string]interface{} {
+func (m *mockFullFeaturedRunner) GetConfiguration() map[string]any {
 	return m.config
 }
 
@@ -84,7 +84,7 @@ func (m *mockFullFeaturedRunner) GetSupportedGates() []string {
 
 func (m *mockFullFeaturedRunner) RunBatch(c circuit.Circuit, shots int) ([]string, error) {
 	results := make([]string, shots)
-	for i := 0; i < shots; i++ {
+	for i := range shots {
 		result, err := m.RunOnce(c)
 		if err != nil {
 			return results[:i], err
