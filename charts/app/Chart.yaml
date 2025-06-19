@@ -1,5 +1,0 @@
-apiVersion: v1
-description: KegPet - Quantum Playground
-name: qplay
-version: 0.0.1
-appVersion: 0.0.1
