@@ -17,7 +17,7 @@ import (
 
 // QSimRunner is a quantum circuit simulator built from scratch
 type QSimRunner struct {
-	config  map[string]interface{}
+	config  map[string]any
 	mu      sync.RWMutex
 	metrics QSimMetrics
 	verbose bool
@@ -44,7 +44,7 @@ type QuantumState struct {
 // NewQSimRunner creates a new quantum simulator instance
 func NewQSimRunner() *QSimRunner {
 	runner := &QSimRunner{
-		config:  make(map[string]interface{}),
+		config:  make(map[string]any),
 		verbose: false,
 	}
 
@@ -88,7 +88,7 @@ func (qs *QuantumState) Clone() *QuantumState {
 func (qs *QuantumState) Normalize() {
 	var norm float64
 	// Optimized norm calculation
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		amp := qs.amplitudes[i]
 		norm += real(amp)*real(amp) + imag(amp)*imag(amp)
 	}
@@ -96,7 +96,7 @@ func (qs *QuantumState) Normalize() {
 	if norm > 1e-10 { // Avoid division by zero
 		norm = math.Sqrt(norm)
 		invNorm := complex(1.0/norm, 0)
-		for i := 0; i < len(qs.amplitudes); i++ {
+		for i := range qs.amplitudes {
 			qs.amplitudes[i] *= invNorm
 		}
 	}
@@ -213,7 +213,7 @@ func (qs *QuantumState) applyHadamard(qubit int) error {
 
 	// Process only half the states (avoid double processing)
 	// Work in-place to avoid memory allocation
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		if (i & mask) == 0 { // |0⟩ component
 			j := i | mask // Corresponding |1⟩ state
 			a0, a1 := qs.amplitudes[i], qs.amplitudes[j]
@@ -308,7 +308,7 @@ func (qs *QuantumState) applyCNOT(control, target int) error {
 	targetMask := 1 << target
 
 	// Only process states where control is |1⟩ and target is |0⟩
-	for i := 0; i < len(qs.amplitudes); i++ {
+	for i := range qs.amplitudes {
 		if (i&controlMask) != 0 && (i&targetMask) == 0 {
 			j := i | targetMask
 			qs.amplitudes[i], qs.amplitudes[j] = qs.amplitudes[j], qs.amplitudes[i]
