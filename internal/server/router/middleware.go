@@ -62,17 +62,17 @@ func requestWrapper(log *logger.Logger) func(c *gin.Context) {
 		status := c.Writer.Status()
 		latency := time.Since(start)
 
-		meta := []interface{}{
+		meta := []any{
 			"path", reqPath,
 			"method", c.Request.Method,
 			"statuscode", status,
 			"latency", latency,
 		}
 
-		switch {
-		case status == http.StatusOK || status == http.StatusCreated || status == http.StatusNoContent:
+		switch status {
+		case http.StatusOK, http.StatusCreated, http.StatusNoContent:
 			l.Info().Fields(meta).Msg(requestServedMsg)
-		case status == http.StatusNotFound:
+		case http.StatusNotFound:
 			l.Warn().Fields(meta).Msg(requestServedMsg)
 		default:
 			l.Error().Fields(meta).Msg(requestServedMsg)

@@ -8,14 +8,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/kegliz/qplay/qc/builder"
-	"github.com/kegliz/qplay/qc/circuit"
-	"github.com/kegliz/qplay/qc/renderer"
-	"github.com/kegliz/qplay/qc/simulator"
+	"github.com/kegliz/qcm/qc/builder"
+	"github.com/kegliz/qcm/qc/circuit"
+	"github.com/kegliz/qcm/qc/renderer"
+	"github.com/kegliz/qcm/qc/simulator"
 
 	// Import simulators to register them
-	_ "github.com/kegliz/qplay/qc/simulator/itsu"
-	_ "github.com/kegliz/qplay/qc/simulator/qsim"
+	_ "github.com/kegliz/qcm/qc/simulator/itsu"
+	_ "github.com/kegliz/qcm/qc/simulator/qsim"
 )
 
 // CircuitRequest represents the structure for circuit execution requests
@@ -34,12 +34,12 @@ type CircuitRequest struct {
 
 // CircuitResponse represents the structure for circuit execution responses
 type CircuitResponse struct {
-	Measurements  map[string]int    `json:"measurements,omitempty"`
-	StateVector   []complex128      `json:"state_vector,omitempty"`
-	CircuitImage  string           `json:"circuit_image,omitempty"`
-	ExecutionTime float64          `json:"execution_time,omitempty"`
-	Backend       string           `json:"backend"`
-	Shots         int              `json:"shots"`
+	Measurements  map[string]int `json:"measurements,omitempty"`
+	StateVector   []complex128   `json:"state_vector,omitempty"`
+	CircuitImage  string         `json:"circuit_image,omitempty"`
+	ExecutionTime float64        `json:"execution_time,omitempty"`
+	Backend       string         `json:"backend"`
+	Shots         int            `json:"shots"`
 }
 
 var badRequestErrorMsg = "Bad Request - please contact the administrator"
@@ -121,10 +121,10 @@ func (a *appServer) ExecuteCircuit(c *gin.Context) {
 
 	// Prepare response
 	response := CircuitResponse{
-		Measurements:  result,
-		CircuitImage:  circuitImage,
-		Backend:       req.Backend,
-		Shots:         req.Shots,
+		Measurements: result,
+		CircuitImage: circuitImage,
+		Backend:      req.Backend,
+		Shots:        req.Shots,
 	}
 
 	c.JSON(http.StatusOK, response)
@@ -235,7 +235,7 @@ func (a *appServer) executeCircuit(circ circuit.Circuit, backend string, shots i
 	})
 
 	// Run simulation
-	results, err := sim.RunSerial(circ)
+	results, err := sim.Run(circ)
 	if err != nil {
 		return nil, fmt.Errorf("simulation failed: %w", err)
 	}
